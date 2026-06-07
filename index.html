@@ -133,10 +133,6 @@
             font-size: 2.5rem;
         }
 
-        .header-wallet-container {
-            display: none;
-        }
-
         /* Multi-Wallet Modal Styling */
         #wallet-modal {
             display: none;
@@ -200,7 +196,7 @@
         .slider-container img.active { left: 0; }
         .slider-container img.exit { left: -100%; }
 
-        /* Mint UI Box inputs & Counter Button Layout */
+        /* Mint UI Box inputs with Plus/Minus Controls */
         .mint-input-wrapper {
             display: flex;
             justify-content: center;
@@ -209,37 +205,32 @@
             margin: 20px 0;
         }
 
-        .counter-btn {
-            width: 45px;
-            height: 45px;
+        .mint-input-wrapper input {
+            width: 100px;
+            padding: 10px;
             font-size: 1.5rem;
-            font-weight: bold;
-            background: var(--white-color);
-            border: 3px solid var(--dark-black);
-            cursor: pointer;
-            box-shadow: 3px 3px 0px var(--dark-black);
-        }
-        .counter-btn:active {
-            transform: translate(2px, 2px);
-            box-shadow: 0px 0px 0px var(--dark-black);
-        }
-
-        .mint-display-qty {
-            font-size: 2rem;
-            font-weight: bold;
-            width: 90px;
             text-align: center;
             border: 3px solid var(--dark-black);
             background: var(--white-color);
-            padding: 2px 0;
         }
 
-        .mint-action-area {
-            margin-top: 15px;
+        .ctrl-btn {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 1.5rem;
+            width: 45px;
+            height: 45px;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            gap: 12px;
+            cursor: pointer;
+            background: var(--white-color);
+            border: 3px solid var(--dark-black);
+            box-shadow: 3px 3px 0px var(--dark-black);
+            user-select: none;
+        }
+        .ctrl-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px var(--dark-black);
         }
 
         /* Search Section */
@@ -413,9 +404,7 @@
 
     <header>
         <div class="logo-main live-glitch-brand">IcePunks</div>
-        <div class="header-wallet-container" id="headerWalletWrap">
-            <button class="punk-btn" id="connectBtnHeader">Connect Wallet</button>
-        </div>
+        <button class="punk-btn" id="connectBtn" onclick="openWalletModal()">Connect Wallet</button>
     </header>
 
     <main>
@@ -428,12 +417,15 @@
                 CURRENT STATUS: <span id="mintCounter">0 / 10000</span>
             </div>
             <div style="color: #ff007f; font-weight: bold; margin-bottom: 10px;" id="promoStatusMessage">
-                FIRST ICEPUNKS FREE MINT...
+                Syncing with blockchain network infrastructure...
             </div>
             
-            <div id="web3-interaction-box" style="margin-top: 20px;">
-                <button class="punk-btn" id="centerConnectBtn" style="font-size: 1.3rem; padding: 12px 30px;" onclick="openWalletModal()">CONNECT WALLET TO MINT</button>
+            <div class="mint-input-wrapper">
+                <div class="ctrl-btn" onclick="adjustMintQuantity(-1)">-</div>
+                <input type="number" id="mintQuantity" value="1" min="1">
+                <div class="ctrl-btn" onclick="adjustMintQuantity(1)">+</div>
             </div>
+            <button class="punk-btn" style="width: 200px; font-size: 1.2rem;" onclick="executeMintAction()">MINT NOW</button>
         </div>
 
         <div class="punk-box search-box" style="text-align: center;">
@@ -480,17 +472,17 @@
 
     <div class="minimal-footer">
         <a class="footer-link" href="https://x.com" target="_blank">🐦 TWITTER (X)</a>
-        <a class="footer-link" href="https://opensea.io/collection/icepunksnft" target="_blank">⛵ OPENSEA</a>
-        <a class="footer-link" href="https://etherscan.io/token/0x603429aa5dd0829c8d9f377efb5ee3fb63ea3915" target="_blank">⛓️ ETHERSCAN SMART CONTRACT</a>
+        <a class="footer-link" href="https://opensea.io" target="_blank">⛵ OPENSEA</a>
+        <a class="footer-link" href="https://etherscan.io" target="_blank">⛓️ ETHERSCAN SMART CONTRACT</a>
     </div>
 
     <div id="wallet-modal" onclick="closeWalletModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 style="font-family: 'Permanent Marker', cursive; margin-bottom: 15px;">SELECT INJECTED PROVIDER</h3>
-            <div class="wallet-option" onclick="selectWeb3Extension('metamask')"><span>Metamask Wallet</span><span>➤</span></div>
-            <div class="wallet-option" onclick="selectWeb3Extension('phantom')"><span>Phantom Wallet</span><span>➤</span></div>
-            <div class="wallet-option" onclick="selectWeb3Extension('okx')"><span>OKX Wallet</span><span>➤</span></div>
-            <div class="wallet-option" onclick="selectWeb3Extension('keplr')"><span>Keplr Wallet</span><span>➤</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('metamask')"><span>Metamask Wallet</span><span>🌐</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('phantom')"><span>Phantom Wallet</span><span>👻</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('okx')"><span>OKX Wallet</span><span>❌</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('keplr')"><span>Keplr Wallet</span><span>🌌</span></div>
             <div class="wallet-option" onclick="selectWeb3Extension('others')"><span>Others Wallet Connection</span><span>🔌</span></div>
             <button class="punk-btn" style="margin-top:15px; width:100%;" onclick="document.getElementById('wallet-modal').style.display='none'">CLOSE MENU</button>
         </div>
@@ -513,39 +505,15 @@
         const GITHUB_BASE_IMAGE = "https://raw.githubusercontent.com/icepunks/icepunksimage/main/images/";
         const GITHUB_BASE_META = "https://raw.githubusercontent.com/icepunks/icepunksmetadata/main/metadata/";
 
+        // Synchronized with updated Abi (2).txt structure
         const CONTRACT_ABI = [
-            {"inputs":[{"internalType":"string","name":"initBaseURI","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"approved","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Approval","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":false,"internalType":"bool","name":"approved","type":"bool"}],"name":"ApprovalForAll","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":false,"internalType":"bool","name":"isLocked","type":"bool"}],"name":"MarketLockStatusChanged","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},
-            {"inputs":[],"name":"MAX_SUPPLY","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[],"name":"MINT_PRICE","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","type":"text","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"burn","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[],"name":"contractURI","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"getApproved","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"operator","type":"address"}],"name":"isApprovedForAll","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
-            {"inputs":[],"name":"marketLocked","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mint","type":"payable","outputs":[],"type":"function"},
-            {"inputs":[],"name":"name","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
-            {"inputs":[],"name":"nextTokenId","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[],"name":"owner","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
-            {"inputs":[],"name":"renounceOwnership","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"safeTransferFrom","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"safeTransferFrom","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","type":"text","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"string":"newBaseURI","name":"newBaseURI","type":"string"}],"name":"setBaseURI","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"bool":"lockState","name":"lockState","type":"bool"}],"name":"setMarketLock","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"bytes4":"interfaceId","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","type":"view","outputs":[{"bool":"","name":"","type":"bool"}],"stateMutability":"view"},
-            {"inputs":[],"name":"symbol","type":"view","outputs":[{"string":"","name":"","type":"string"}],"stateMutability":"view"},
-            {"inputs":[],"name":"tokenURI","type":"view","outputs":[{"string":"","name":"","type":"string"}],"stateMutability":"view"},
-            {"inputs":[],"name":"totalUniqueMinters","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"walletMintCount","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[],"name":"withdraw","type":"nonpayable","outputs":[],"type":"function"}
+            {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"burn","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"string","name":"initBaseURI","type":"string"}],"name":"setBaseURI","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mint","outputs":[],"stateMutability":"payable","type":"function"},
+            {"inputs":[],"name":"nextTokenId","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}
         ];
 
         let activeProvider;
@@ -554,10 +522,8 @@
         let userContractInstance;
         let currentCarouselIndex = 0;
         let maxMintedSupply = 0;
-        let globalSelectedQuantity = 1;
-        let connectedWalletAddress = "";
+        let userWalletNFTCount = 0; // State keeping tracker for Free/Paid toggle
 
-        // Custom Notification Engine
         function notifyApp(message, type = 'success') {
             const container = document.getElementById("notification-center");
             const card = document.createElement("div");
@@ -570,7 +536,16 @@
                 card.style.opacity = "0";
                 card.style.transform = "translateX(100%)";
                 setTimeout(() => card.remove(), 400);
-            }, 4500);
+            }, 4000);
+        }
+
+        // Plus and Minus Controller Handler
+        function adjustMintQuantity(val) {
+            const input = document.getElementById("mintQuantity");
+            let curr = parseInt(input.value) || 1;
+            curr += val;
+            if (curr < 1) curr = 1;
+            input.value = curr;
         }
 
         window.addEventListener("DOMContentLoaded", () => {
@@ -606,19 +581,24 @@
                 maxMintedSupply = Number(nextId);
                 document.getElementById("mintCounter").innerText = `${maxMintedSupply} / 10000`;
                 updateMatrixFreezingStates();
-                updateDynamicPromoLabels();
-                if (userContractInstance) {
-                    renderDynamicWeb3Interface();
+                
+                if (activeSigner) {
+                    const address = await activeSigner.getAddress();
+                    const bal = await readOnlyContract.balanceOf(address);
+                    userWalletNFTCount = Number(bal);
                 }
+                updateDynamicPromoLabels();
             } catch (e) { console.log("Data layer syncing error", e); }
         }
 
         function updateDynamicPromoLabels() {
             const label = document.getElementById("promoStatusMessage");
-            if (maxMintedSupply < 1000) {
-                label.innerText = "STAGE 1 ALLOCATION: FIRST 100 WALLETS GET 10 FREE MINTS EACH!";
+            if (!activeSigner) {
+                label.innerText = "CONNECT WALLET TO CHECK FIRST FREE MINT ELIGIBILITY";
+            } else if (userWalletNFTCount === 0) {
+                label.innerText = "YOUR FIRST NFT IS 100% FREE! (0 ETH)";
             } else {
-                label.innerText = "STAGE 2 ALLOCATION: PUBLIC COHORT ACTIVE - 1 FREE MINT PER NEW WALLET!";
+                label.innerText = "PROMO COMPLETE: 0.0002 ETH REQUIRED PER ADDITIONAL MINT";
             }
         }
 
@@ -681,135 +661,62 @@
                 const accounts = await activeProvider.send("eth_requestAccounts", []);
                 activeSigner = await activeProvider.getSigner();
                 userContractInstance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, activeSigner);
-                connectedWalletAddress = accounts[0];
                 
-                // Shift UI elements on successful wallet connection
-                document.getElementById("headerWalletWrap").style.display = "block";
-                const shortAddress = connectedWalletAddress.substring(0,6) + "..." + connectedWalletAddress.substring(connectedWalletAddress.length - 4);
-                document.getElementById("connectBtnHeader").innerText = shortAddress;
-                
+                const shortAddress = accounts[0].substring(0,6) + "..." + accounts[0].substring(accounts[0].length - 4);
+                document.getElementById("connectBtn").innerText = shortAddress;
                 notifyApp("Crypto wallet connection established successfully!");
-                renderDynamicWeb3Interface();
+                syncChainDataMetrics();
             } catch (err) {
                 console.error(err);
                 notifyApp("Connection handshake rejected by user.", "error");
             }
         }
 
-        // Logic Engine for 3 Dynamic Mint Buttons & Counters via Local Storage Persistence
-        function renderDynamicWeb3Interface() {
-            const box = document.getElementById("web3-interaction-box");
-            if (!userContractInstance) return;
-
-            const storageKey_10Free = `icepunks_claimed_10free_${connectedWalletAddress.toLowerCase()}`;
-            const storageKey_1Free = `icepunks_claimed_1free_${connectedWalletAddress.toLowerCase()}`;
-
-            const hasClaimed10Free = localStorage.getItem(storageKey_10Free) === "true";
-            const hasClaimed1Free = localStorage.getItem(storageKey_1Free) === "true";
-
-            let htmlPayload = "";
-
-            // SCENARIO A: Within the initial 100 users tier (< 1000 items on contract counter)
-            if (maxMintedSupply < 1000) {
-                if (!hasClaimed10Free) {
-                    htmlPayload = `
-                        <div class="mint-action-area">
-                            <p style="font-weight:bold; color:#00e5ff;">STAGE 1 FREE ALLOCATION DROPPING</p>
-                            <button class="punk-btn" style="font-size:1.3rem; background:var(--ice-color); width:100%; max-width:400px;" onclick="triggerMintFlow('early_10_free')">MINT 10 FREE (EARLY PUNK)</button>
-                        </div>
-                    `;
-                } else {
-                    // 10 Free Claimed -> Shift straight to paid custom allocation (No 1 free tier)
-                    htmlPayload = generatePaidCounterUI();
-                }
-            } 
-            // SCENARIO B: Stage 1 threshold crossed (>= 1000 total supply items minted)
-            else {
-                if (!hasClaimed1Free) {
-                    htmlPayload = `
-                        <div class="mint-action-area">
-                            <p style="font-weight:bold; color:#ff007f;">COMMUNITY INCENTIVE SLOT OPEN</p>
-                            <button class="punk-btn" style="font-size:1.3rem; background:#ffbc00; width:100%; max-width:400px;" onclick="triggerMintFlow('public_1_free')">MINT 1 FREE (COMMUNITY PUNK)</button>
-                        </div>
-                    `;
-                } else {
-                    // 1 Free Claimed -> Enable paid custom allocation seamlessly
-                    htmlPayload = generatePaidCounterUI();
-                }
-            }
-
-            box.innerHTML = htmlPayload;
-        }
-
-        function generatePaidCounterUI() {
-            return `
-                <div class="mint-action-area">
-                    <p style="font-weight:bold; margin-bottom:5px;">ENTER QUANTITY FOR CUSTOM LIQUIDITY MINT</p>
-                    <div class="mint-input-wrapper">
-                        <button class="counter-btn" onclick="alterQuantityValue(-1)">-</button>
-                        <div class="mint-display-qty" id="qtyDisplayNode">${globalSelectedQuantity}</div>
-                        <button class="counter-btn" onclick="alterQuantityValue(1)">+</button>
-                    </div>
-                    <button class="punk-btn" style="font-size:1.2rem; width:100%; max-width:400px;" onclick="triggerMintFlow('paid_custom')">MINT CUSTOM (0.0002 ETH/each)</button>
-                </div>
-            `;
-        }
-
-        function alterQuantityValue(amount) {
-            globalSelectedQuantity += amount;
-            if (globalSelectedQuantity < 1) globalSelectedQuantity = 1;
-            const node = document.getElementById("qtyDisplayNode");
-            if (node) node.innerText = globalSelectedQuantity;
-        }
-
-        async function triggerMintFlow(mintType) {
+        async function executeMintAction() {
             if (!userContractInstance) {
                 openWalletModal();
                 return;
             }
-
-            let finalMintQuantity = 1;
-            let totalValueEther = "0";
-
-            if (mintType === 'early_10_free') {
-                finalMintQuantity = 10;
-                totalValueEther = "0";
-            } else if (mintType === 'public_1_free') {
-                finalMintQuantity = 1;
-                totalValueEther = "0";
-            } else if (mintType === 'paid_custom') {
-                finalMintQuantity = globalSelectedQuantity;
-                // Custom math matching established contract tier matrices
-                let calculatedPaidValue = finalMintQuantity * 0.0002;
-                totalValueEther = calculatedPaidValue.toFixed(4);
+            const quantity = parseInt(document.getElementById("mintQuantity").value);
+            if (isNaN(quantity) || quantity <= 0) {
+                notifyApp("Please enter a valid asset mint quantity.", "error");
+                return;
             }
 
             try {
-                notifyApp("Sign the request in your wallet extension to broadcast transaction...", "loading");
-                
-                const finalWeiValue = ethers.parseEther(totalValueEther);
-                
-                // Call the contract mint function with the calculated payload
-                const tx = await userContractInstance.mint(finalMintQuantity, { value: finalWeiValue });
-                
-                notifyApp("Transaction broadcast completed! Waiting for blockchain confirmation block processing...", "loading");
-                await tx.wait();
-                
-                // Track and lock state to prevent multiple claims using browser local cache
-                if (mintType === 'early_10_free') {
-                    localStorage.setItem(`icepunks_claimed_10free_${connectedWalletAddress.toLowerCase()}`, "true");
-                } else if (mintType === 'public_1_free') {
-                    localStorage.setItem(`icepunks_claimed_1free_${connectedWalletAddress.toLowerCase()}`, "true");
+                // Fetch dynamic real-time contract values to avoid transaction error
+                const address = await activeSigner.getAddress();
+                const currentBal = await readOnlyContract.balanceOf(address);
+                userWalletNFTCount = Number(currentBal);
+
+                let totalCostEth = 0;
+
+                // Absolute custom accurate logic handling matching contract configurations
+                if (userWalletNFTCount === 0) {
+                    // First NFT is completely free, subsequent units in the same batch cost 0.0002 each
+                    totalCostEth = (quantity - 1) * 0.0002;
+                } else {
+                    // Wallet has already minted its free limit, base rate of 0.0002 applies globally
+                    totalCostEth = quantity * 0.0002;
                 }
 
-                notifyApp(`Minting complete! Successfully distributed ${finalMintQuantity} IcePunks collectibles to your account.`, "success");
+                const finalWeiValue = ethers.parseEther(totalCostEth.toString());
+                
+                notifyApp("Dispatched to blockchain network... Awaiting signature and confirmation logs.", "loading");
+                
+                // Dispatches real-time secure transaction straight to Web3 wallet connection layer
+                const tx = await userContractInstance.mint(quantity, { value: finalWeiValue });
+                notifyApp("Transaction hash confirmed! Processing asset updates on-chain...", "loading");
+                
+                await tx.wait();
+                notifyApp(`Collection complete! Successfully minted ${quantity} digital assets into your secure ledger account.`, "success");
                 syncChainDataMetrics();
             } catch (err) {
                 console.error(err);
-                if (err.message && err.message.includes("insufficient funds")) {
-                    notifyApp("Execution rejected: Account balances insufficient to fund transactional ether costs.", "error");
+                if(err.message.includes("insufficient funds")) {
+                    notifyApp("Execution rejected: Account balance insufficient to fund transactional ether costs.", "error");
                 } else {
-                    notifyApp("Execution aborted: Transaction error or handshake cancellation occurred.", "error");
+                    notifyApp("Execution aborted: Network transaction error occurred.", "error");
                 }
             }
         }
