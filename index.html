@@ -196,7 +196,7 @@
         .slider-container img.active { left: 0; }
         .slider-container img.exit { left: -100%; }
 
-        /* Mint UI Box inputs with Plus/Minus Controls */
+        /* Mint UI Box inputs */
         .mint-input-wrapper {
             display: flex;
             justify-content: center;
@@ -206,7 +206,7 @@
         }
 
         .mint-input-wrapper input {
-            width: 100px;
+            width: 120px;
             padding: 10px;
             font-size: 1.5rem;
             text-align: center;
@@ -214,23 +214,16 @@
             background: var(--white-color);
         }
 
-        .ctrl-btn {
-            font-family: 'Permanent Marker', cursive;
-            font-size: 1.5rem;
+        .adjust-btn {
             width: 45px;
             height: 45px;
+            font-size: 1.8rem;
+            font-family: 'Permanent Marker', cursive;
             display: flex;
-            justify-content: center;
             align-items: center;
-            cursor: pointer;
-            background: var(--white-color);
-            border: 3px solid var(--dark-black);
-            box-shadow: 3px 3px 0px var(--dark-black);
-            user-select: none;
-        }
-        .ctrl-btn:active {
-            transform: translate(2px, 2px);
-            box-shadow: 0px 0px 0px var(--dark-black);
+            justify-content: center;
+            line-height: 1;
+            padding-bottom: 5px;
         }
 
         /* Search Section */
@@ -417,15 +410,15 @@
                 CURRENT STATUS: <span id="mintCounter">0 / 10000</span>
             </div>
             <div style="color: #ff007f; font-weight: bold; margin-bottom: 10px;" id="promoStatusMessage">
-                Syncing with blockchain network infrastructure...
+                YOUR FIRST NFT IS FREE! (THEN 0.0002 ETH EACH)
             </div>
             
             <div class="mint-input-wrapper">
-                <div class="ctrl-btn" onclick="adjustMintQuantity(-1)">-</div>
+                <button class="punk-btn adjust-btn" onclick="adjustQuantity(-1)">-</button>
                 <input type="number" id="mintQuantity" value="1" min="1">
-                <div class="ctrl-btn" onclick="adjustMintQuantity(1)">+</div>
+                <button class="punk-btn adjust-btn" onclick="adjustQuantity(1)">+</button>
+                <button class="punk-btn" onclick="executeMintAction()">MINT NOW</button>
             </div>
-            <button class="punk-btn" style="width: 200px; font-size: 1.2rem;" onclick="executeMintAction()">MINT NOW</button>
         </div>
 
         <div class="punk-box search-box" style="text-align: center;">
@@ -505,15 +498,39 @@
         const GITHUB_BASE_IMAGE = "https://raw.githubusercontent.com/icepunks/icepunksimage/main/images/";
         const GITHUB_BASE_META = "https://raw.githubusercontent.com/icepunks/icepunksmetadata/main/metadata/";
 
-        // Synchronized with updated Abi (2).txt structure
         const CONTRACT_ABI = [
-            {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"burn","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"string","name":"initBaseURI","type":"string"}],"name":"setBaseURI","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mint","outputs":[],"stateMutability":"payable","type":"function"},
-            {"inputs":[],"name":"nextTokenId","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-            {"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}
+            {"inputs":[{"internalType":"string","name":"initBaseURI","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"approved","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Approval","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":false,"internalType":"bool","name":"approved","type":"bool"}],"name":"ApprovalForAll","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":false,"internalType":"bool","name":"isLocked","type":"bool"}],"name":"MarketLockStatusChanged","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},
+            {"inputs":[],"name":"MAX_SUPPLY","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[],"name":"MINT_PRICE","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","type":"function","outputs":[],"stateMutability":"nonpayable"},
+            {"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"burn","type":"function","outputs":[],"stateMutability":"nonpayable"},
+            {"inputs":[],"name":"contractURI","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"getApproved","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"operator","type":"address"}],"name":"isApprovedForAll","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
+            {"inputs":[],"name":"marketLocked","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mint","type":"function","outputs":[],"stateMutability":"payable"},
+            {"inputs":[],"name":"name","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
+            {"inputs":[],"name":"nextTokenId","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[],"name":"owner","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
+            {"inputs":[],"name":"renounceOwnership","type":"function","outputs":[],"stateMutability":"nonpayable"},
+            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"safeTransferFrom","type":"function","outputs":[],"stateMutability":"nonpayable"},
+            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"safeTransferFrom","type":"function","outputs":[],"stateMutability":"nonpayable"},
+            {"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","type":"function","outputs":[],"stateMutability":"nonpayable"},
+            {"inputs":[{"internalType":"string","name":"newBaseURI","type":"string"}],"name":"setBaseURI","type":"function","outputs":[],"stateMutability":"nonpayable"},
+            {"inputs":[{"internalType":"bool","name":"lockState","type":"bool"}],"name":"setMarketLock","type":"function","outputs":[],"stateMutability":"nonpayable"},
+            {"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
+            {"inputs":[],"name":"symbol","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
+            {"inputs":[],"name":"tokenURI","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
+            {"inputs":[],"name":"totalUniqueMinters","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"walletMintCount","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[],"name":"withdraw","type":"function","outputs":[],"stateMutability":"nonpayable"}
         ];
 
         let activeProvider;
@@ -522,8 +539,8 @@
         let userContractInstance;
         let currentCarouselIndex = 0;
         let maxMintedSupply = 0;
-        let userWalletNFTCount = 0; // State keeping tracker for Free/Paid toggle
 
+        // Custom Native Notification Trigger Logic (Replaces Alert)
         function notifyApp(message, type = 'success') {
             const container = document.getElementById("notification-center");
             const card = document.createElement("div");
@@ -531,6 +548,7 @@
             card.innerHTML = `<span>${message}</span>`;
             container.appendChild(card);
             
+            // Auto remove after 4 seconds
             setTimeout(() => {
                 card.style.transition = "opacity 0.4s ease, transform 0.4s ease";
                 card.style.opacity = "0";
@@ -539,16 +557,17 @@
             }, 4000);
         }
 
-        // Plus and Minus Controller Handler
-        function adjustMintQuantity(val) {
+        // Plus Minus Quantity Adjustment Logic
+        function adjustQuantity(amount) {
             const input = document.getElementById("mintQuantity");
-            let curr = parseInt(input.value) || 1;
-            curr += val;
-            if (curr < 1) curr = 1;
-            input.value = curr;
+            let val = parseInt(input.value) || 1;
+            val += amount;
+            if (val < 1) val = 1;
+            input.value = val;
         }
 
         window.addEventListener("DOMContentLoaded", () => {
+            // Intro Screen Display Time
             setTimeout(() => {
                 const intro = document.getElementById("intro-screen");
                 intro.style.transition = "opacity 0.4s ease";
@@ -581,24 +600,26 @@
                 maxMintedSupply = Number(nextId);
                 document.getElementById("mintCounter").innerText = `${maxMintedSupply} / 10000`;
                 updateMatrixFreezingStates();
-                
-                if (activeSigner) {
-                    const address = await activeSigner.getAddress();
-                    const bal = await readOnlyContract.balanceOf(address);
-                    userWalletNFTCount = Number(bal);
-                }
-                updateDynamicPromoLabels();
+                await updateDynamicPromoLabels();
             } catch (e) { console.log("Data layer syncing error", e); }
         }
 
-        function updateDynamicPromoLabels() {
+        async function updateDynamicPromoLabels() {
             const label = document.getElementById("promoStatusMessage");
-            if (!activeSigner) {
-                label.innerText = "CONNECT WALLET TO CHECK FIRST FREE MINT ELIGIBILITY";
-            } else if (userWalletNFTCount === 0) {
-                label.innerText = "YOUR FIRST NFT IS 100% FREE! (0 ETH)";
+            if (activeSigner) {
+                try {
+                    const userAddress = await activeSigner.getAddress();
+                    const mintedCount = await readOnlyContract.walletMintCount(userAddress);
+                    if (Number(mintedCount) === 0) {
+                        label.innerText = "YOUR FIRST NFT IS FREE! (THEN 0.0002 ETH EACH)";
+                    } else {
+                        label.innerText = "FREE MINT CLAIMED! RATE: 0.0002 ETH PER MINTELEMENT";
+                    }
+                } catch (err) {
+                    label.innerText = "YOUR FIRST NFT IS FREE! (THEN 0.0002 ETH EACH)";
+                }
             } else {
-                label.innerText = "PROMO COMPLETE: 0.0002 ETH REQUIRED PER ADDITIONAL MINT";
+                label.innerText = "YOUR FIRST NFT IS FREE! (THEN 0.0002 ETH EACH)";
             }
         }
 
@@ -665,7 +686,7 @@
                 const shortAddress = accounts[0].substring(0,6) + "..." + accounts[0].substring(accounts[0].length - 4);
                 document.getElementById("connectBtn").innerText = shortAddress;
                 notifyApp("Crypto wallet connection established successfully!");
-                syncChainDataMetrics();
+                await updateDynamicPromoLabels();
             } catch (err) {
                 console.error(err);
                 notifyApp("Connection handshake rejected by user.", "error");
@@ -684,27 +705,25 @@
             }
 
             try {
-                // Fetch dynamic real-time contract values to avoid transaction error
-                const address = await activeSigner.getAddress();
-                const currentBal = await readOnlyContract.balanceOf(address);
-                userWalletNFTCount = Number(currentBal);
-
-                let totalCostEth = 0;
-
-                // Absolute custom accurate logic handling matching contract configurations
-                if (userWalletNFTCount === 0) {
-                    // First NFT is completely free, subsequent units in the same batch cost 0.0002 each
-                    totalCostEth = (quantity - 1) * 0.0002;
+                const userAddress = await activeSigner.getAddress();
+                const userMintedAlready = Number(await readOnlyContract.walletMintCount(userAddress));
+                
+                let etherPaymentValue = 0;
+                
+                // If it's the wallet's first time minting, the 1st one is free
+                if (userMintedAlready === 0) {
+                    etherPaymentValue = (quantity - 1) * 0.0002;
                 } else {
-                    // Wallet has already minted its free limit, base rate of 0.0002 applies globally
-                    totalCostEth = quantity * 0.0002;
+                    etherPaymentValue = quantity * 0.0002;
                 }
 
-                const finalWeiValue = ethers.parseEther(totalCostEth.toString());
+                if (etherPaymentValue < 0) etherPaymentValue = 0;
+
+                const finalWeiValue = ethers.parseEther(etherPaymentValue.toFixed(4).toString());
                 
+                // Real-time beautiful loading indicator initiated
                 notifyApp("Dispatched to blockchain network... Awaiting signature and confirmation logs.", "loading");
                 
-                // Dispatches real-time secure transaction straight to Web3 wallet connection layer
                 const tx = await userContractInstance.mint(quantity, { value: finalWeiValue });
                 notifyApp("Transaction hash confirmed! Processing asset updates on-chain...", "loading");
                 
@@ -713,10 +732,10 @@
                 syncChainDataMetrics();
             } catch (err) {
                 console.error(err);
-                if(err.message.includes("insufficient funds")) {
+                if(err.message && err.message.includes("insufficient funds")) {
                     notifyApp("Execution rejected: Account balance insufficient to fund transactional ether costs.", "error");
                 } else {
-                    notifyApp("Execution aborted: Network transaction error occurred.", "error");
+                    notifyApp("Execution aborted: Contract transaction error occurred.", "error");
                 }
             }
         }
