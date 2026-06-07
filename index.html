@@ -65,7 +65,6 @@
             box-shadow: 0px 0px 0px var(--dark-black);
         }
 
-        /* 1. Intro Screen (Time reduced to 1.2s via JS) */
         #intro-screen {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -97,7 +96,6 @@
             100% { transform: translate(0); }
         }
 
-        /* Continuous Multi-Color Glitch for all regular IcePunks text references */
         .live-glitch-brand {
             font-family: 'Permanent Marker', cursive;
             display: inline-block;
@@ -118,7 +116,6 @@
             100% { transform: skew(0deg); }
         }
 
-        /* Header Layout */
         header {
             display: flex;
             justify-content: space-between;
@@ -127,13 +124,13 @@
             width: 100%;
             max-width: 1200px;
             margin: 0 auto;
+            min-height: 80px;
         }
 
         .logo-main {
             font-size: 2.5rem;
         }
 
-        /* Multi-Wallet Modal Styling */
         #wallet-modal {
             display: none;
             position: fixed;
@@ -171,7 +168,6 @@
             background: var(--ice-color);
         }
 
-        /* Carousel Slider Section */
         .slider-container {
             width: 100%;
             max-width: 200px;
@@ -196,49 +192,46 @@
         .slider-container img.active { left: 0; }
         .slider-container img.exit { left: -100%; }
 
-        /* Advanced Plus Minus Quantity Selector Frame */
-        .quantity-controller {
+        /* Plus Minus Quantity Wrapper System */
+        .mint-counter-wrapper {
             display: inline-flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             gap: 10px;
-            margin: 15px auto;
+            margin: 15px 0;
             background: var(--white-color);
             border: 3px solid var(--dark-black);
-            padding: 5px 15px;
-            box-shadow: 4px 4px 0px var(--dark-black);
+            padding: 5px 10px;
         }
 
-        .qty-btn {
+        .counter-btn {
             background: var(--dark-black);
             color: var(--white-color);
             border: none;
-            width: 32px;
-            height: 32px;
-            font-size: 1.4rem;
+            width: 35px;
+            height: 35px;
+            font-size: 1.5rem;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Share Tech Mono', monospace;
         }
 
-        .qty-btn:active {
+        .counter-btn:active {
             opacity: 0.8;
         }
 
-        .quantity-controller input {
+        .mint-counter-wrapper input {
             width: 80px;
             border: none;
-            font-size: 1.6rem;
-            font-weight: bold;
             text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
             outline: none;
             background: transparent;
         }
 
-        /* Search Section */
         .search-box input {
             width: 70%;
             padding: 10px;
@@ -259,7 +252,6 @@
             border: 3px solid var(--dark-black);
         }
 
-        /* Burn UI Container */
         .burn-box input {
             width: 50%;
             padding: 10px;
@@ -268,7 +260,6 @@
             margin-right: 10px;
         }
 
-        /* 10k Grid System with Glassmorphism Frozen Layer States */
         .grid-frame-container {
             max-height: 400px;
             overflow-y: auto;
@@ -304,7 +295,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Trait Overlay Panel */
         #trait-modal {
             display: none;
             position: fixed;
@@ -325,7 +315,6 @@
             box-shadow: 8px 8px 0px var(--dark-black);
         }
 
-        /* Roadmap List */
         .roadmap-step {
             margin: 15px 0;
             padding-left: 15px;
@@ -333,7 +322,6 @@
             text-align: left;
         }
 
-        /* Clean Unified Minimalist Footer System */
         .minimal-footer {
             margin: 40px auto;
             padding: 20px;
@@ -361,7 +349,6 @@
             color: #ff007f;
         }
 
-        /* Custom Real-Time In-App Message Center Container */
         #notification-center {
             position: fixed;
             bottom: 20px;
@@ -375,7 +362,7 @@
         }
 
         .toast-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.9);
             border-left: 5px solid var(--ice-color);
             border-top: 1px solid rgba(0, 229, 255, 0.3);
             border-right: 1px solid rgba(0, 229, 255, 0.3);
@@ -398,16 +385,17 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* Helper alignment classes for conditional buttons */
-        .mint-panel-section {
-            display: none;
+        /* Dynamic Conditional Button Blocks Styling */
+        .mint-action-container {
+            margin-top: 20px;
+            display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            width: 100%;
+            gap: 15px;
         }
-        .mint-panel-section.active-panel {
-            display: flex;
+
+        .hidden-panel {
+            display: none !important;
         }
     </style>
 </head>
@@ -421,7 +409,7 @@
 
     <header>
         <div class="logo-main live-glitch-brand">IcePunks</div>
-        <button class="punk-btn" id="connectBtn" onclick="openWalletModal()">Connect Wallet</button>
+        <div id="headerWalletContainer"></div>
     </header>
 
     <main>
@@ -433,30 +421,12 @@
             <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;" id="liveMintText">
                 CURRENT STATUS: <span id="mintCounter">0 / 10000</span>
             </div>
-            <div style="color: #ff007f; font-weight: bold; margin-bottom: 20px;" id="promoStatusMessage">
+            <div style="color: #ff007f; font-weight: bold; margin-bottom: 10px;" id="promoStatusMessage">
                 Syncing with blockchain network infrastructure...
             </div>
             
-            <div class="mint-panel-section" id="tierFree10Panel">
-                <p style="font-weight:bold; margin-bottom:10px; color:#7000ff;">FIRST 100 UNIQUE MINTERS ALLOCATION</p>
-                <button class="punk-btn" style="font-size:1.3rem; padding:10px 25px;" onclick="executeMintTierAction('free10')">CLAIM FREE 10 PUNKS</button>
-            </div>
-
-            <div class="mint-panel-section" id="tierFree1Panel">
-                <p style="font-weight:bold; margin-bottom:10px; color:#ff007f;">NEW USER WELCOME GIFT ALLOCATION</p>
-                <button class="punk-btn" style="font-size:1.3rem; padding:10px 25px;" onclick="executeMintTierAction('free1')">CLAIM FREE 1 PUNK</button>
-            </div>
-
-            <div class="mint-panel-section" id="tierPaidPanel">
-                <p style="font-weight:bold; margin-bottom:10px; color:#050505;">BASE ALLOCATION UNLOCKED: 0.0002 ETH PER ASSET</p>
-                <div class="quantity-controller">
-                    <button class="qty-btn" onclick="adjustInputQty(-1)">-</button>
-                    <input type="number" id="mintQuantity" value="1" min="1">
-                    <button class="qty-btn" onclick="adjustInputQty(1)">+</button>
-                </div>
-                <div style="margin-top:10px;">
-                    <button class="punk-btn" style="font-size:1.3rem; padding:10px 25px;" onclick="executeMintTierAction('paid')">MINT COLLECTIBLES</button>
-                </div>
+            <div class="mint-action-container" id="mainMintInteractionBox">
+                <button class="punk-btn" style="font-size:1.3rem; padding: 12px 24px;" id="embeddedConnectBtn" onclick="openWalletModal()">CONNECT WALLET TO MINT</button>
             </div>
         </div>
 
@@ -504,17 +474,17 @@
 
     <div class="minimal-footer">
         <a class="footer-link" href="https://x.com" target="_blank">🐦 TWITTER (X)</a>
-        <a class="footer-link" href="https://opensea.io" target="_blank">⛵ OPENSEA</a>
-        <a class="footer-link" href="https://etherscan.io" target="_blank">⛓️ ETHERSCAN SMART CONTRACT</a>
+        <a class="footer-link" href="https://opensea.io/collection/icepunksnft" target="_blank">⛵ OPENSEA</a>
+        <a class="footer-link" href="https://etherscan.io/token/0x603429aa5dd0829c8d9f377efb5ee3fb63ea3915" target="_blank">⛓️ ETHERSCAN SMART CONTRACT</a>
     </div>
 
     <div id="wallet-modal" onclick="closeWalletModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 style="font-family: 'Permanent Marker', cursive; margin-bottom: 15px;">SELECT INJECTED PROVIDER</h3>
-            <div class="wallet-option" onclick="selectWeb3Extension('metamask')"><span>Metamask Wallet</span><span>🌐</span></div>
-            <div class="wallet-option" onclick="selectWeb3Extension('phantom')"><span>Phantom Wallet</span><span>👻</span></div>
-            <div class="wallet-option" onclick="selectWeb3Extension('okx')"><span>OKX Wallet</span><span>❌</span></div>
-            <div class="wallet-option" onclick="selectWeb3Extension('keplr')"><span>Keplr Wallet</span><span>🌌</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('metamask')"><span>Metamask Wallet</span><span>➤</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('phantom')"><span>Phantom Wallet</span><span>➤</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('okx')"><span>OKX Wallet</span><span>➤</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('keplr')"><span>Keplr Wallet</span><span>➤</span></div>
             <div class="wallet-option" onclick="selectWeb3Extension('others')"><span>Others Wallet Connection</span><span>🔌</span></div>
             <button class="punk-btn" style="margin-top:15px; width:100%;" onclick="document.getElementById('wallet-modal').style.display='none'">CLOSE MENU</button>
         </div>
@@ -546,7 +516,7 @@
             {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},
             {"inputs":[],"name":"MAX_SUPPLY","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
             {"inputs":[],"name":"MINT_PRICE","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","type":"text","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","type":"nonpayable","outputs":[],"type":"function"},
             {"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
             {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"burn","type":"nonpayable","outputs":[],"type":"function"},
             {"inputs":[],"name":"contractURI","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
@@ -561,12 +531,12 @@
             {"inputs":[],"name":"renounceOwnership","type":"nonpayable","outputs":[],"type":"function"},
             {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"safeTransferFrom","type":"nonpayable","outputs":[],"type":"function"},
             {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"safeTransferFrom","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","type":"text","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"string":"newBaseURI","name":"newBaseURI","type":"string"}],"name":"setBaseURI","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"bool":"lockState","name":"lockState","type":"bool"}],"name":"setMarketLock","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"bytes4":"interfaceId","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","type":"view","outputs":[{"bool":"","name":"","type":"bool"}],"stateMutability":"view"},
-            {"inputs":[],"name":"symbol","type":"view","outputs":[{"string":"","name":"","type":"string"}],"stateMutability":"view"},
-            {"inputs":[],"name":"tokenURI","type":"view","outputs":[{"string":"","name":"","type":"string"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"internalType":"string","name":"newBaseURI","type":"string"}],"name":"setBaseURI","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"internalType":"bool","name":"lockState","type":"bool"}],"name":"setMarketLock","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
+            {"inputs":[],"name":"symbol","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
+            {"inputs":[],"name":"tokenURI","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
             {"inputs":[],"name":"totalUniqueMinters","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
             {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"walletMintCount","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
             {"inputs":[],"name":"withdraw","type":"nonpayable","outputs":[],"type":"function"}
@@ -578,10 +548,8 @@
         let userContractInstance;
         let currentCarouselIndex = 0;
         let maxMintedSupply = 0;
-        let globalUniqueMinters = 0;
-        let userWalletAddress = "";
+        let connectedUserAddress = "";
 
-        // Custom Native Notification Trigger Logic (Replaces Alert)
         function notifyApp(message, type = 'success') {
             const container = document.getElementById("notification-center");
             const card = document.createElement("div");
@@ -595,14 +563,6 @@
                 card.style.transform = "translateX(100%)";
                 setTimeout(() => card.remove(), 400);
             }, 4000);
-        }
-
-        function adjustInputQty(val) {
-            const inp = document.getElementById("mintQuantity");
-            let curr = parseInt(inp.value) || 1;
-            curr += val;
-            if (curr < 1) curr = 1;
-            inp.value = curr;
         }
 
         window.addEventListener("DOMContentLoaded", () => {
@@ -622,12 +582,13 @@
             try {
                 const fallbackProvider = new ethers.JsonRpcProvider(ALCHEMY_RPC_URLS[0]);
                 readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, fallbackProvider);
-                syncChainDataMetrics();
-                setInterval(syncChainDataMetrics, 5000);
+                await syncChainDataMetrics();
+                setInterval(syncChainDataMetrics, 6000);
             } catch (err) {
                 console.error("Primary RPC layer offline", err);
                 const secondaryProvider = new ethers.JsonRpcProvider(ALCHEMY_RPC_URLS[1]);
                 readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, secondaryProvider);
+                await syncChainDataMetrics();
             }
         }
 
@@ -635,51 +596,22 @@
             if (!readOnlyContract) return;
             try {
                 const nextId = await readOnlyContract.nextTokenId();
-                const uniqueMinters = await readOnlyContract.totalUniqueMinters();
-                
                 maxMintedSupply = Number(nextId);
-                globalUniqueMinters = Number(uniqueMinters);
-                
                 document.getElementById("mintCounter").innerText = `${maxMintedSupply} / 10000`;
                 updateMatrixFreezingStates();
-                refreshDynamicPanelsUI();
+                updateDynamicPromoLabels();
+                if(userContractInstance) {
+                    renderConditionalMintButtons();
+                }
             } catch (e) { console.log("Data layer syncing error", e); }
         }
 
-        // Advanced Multi-Tier Dynamic Visibility Matrix with Device Native LocalStorage Support
-        function refreshDynamicPanelsUI() {
-            // Hide all panels initially
-            document.getElementById("tierFree10Panel").classList.remove("active-panel");
-            document.getElementById("tierFree1Panel").classList.remove("active-panel");
-            document.getElementById("tierPaidPanel").classList.remove("active-panel");
-
-            const promoLabel = document.getElementById("promoStatusMessage");
-
-            // LocalStorage Keys for persistent tracking per device architecture
-            const hasDoneFree10 = localStorage.getItem(`icepunks_free10_${userWalletAddress}`);
-            const hasDoneFree1 = localStorage.getItem(`icepunks_free1_${userWalletAddress}`);
-
-            if (globalUniqueMinters < 100) {
-                promoLabel.innerText = `EARLY INSIDER ROUND ACTIVE: ${globalUniqueMinters} / 100 SLOTS ALLOCATED!`;
-                
-                if (userWalletAddress !== "" && hasDoneFree10 === "true") {
-                    // Current wallet has successfully taken the 10 free ones, shift directly to infinite paid minting
-                    document.getElementById("tierPaidPanel").classList.add("active-panel");
-                } else {
-                    // Slot open and device clear: show the 10 Free Button
-                    document.getElementById("tierFree10Panel").classList.add("active-panel");
-                }
+        function updateDynamicPromoLabels() {
+            const label = document.getElementById("promoStatusMessage");
+            if (maxMintedSupply < 1000) {
+                label.innerText = "ACTIVE ALLOCATION TIER: FIRST 100 USERS 10 FREE MINT CODES ENGAGED!";
             } else {
-                // First 100 slots completed! Automatically wipe the 10 Free Option globally
-                promoLabel.innerText = "PUBLIC TIER OPEN: MINT STABLE INJECTIONS NOW!";
-                
-                if (userWalletAddress !== "" && hasDoneFree1 === "true") {
-                    // Already used the 1 welcome gift, render the paid selection dashboard
-                    document.getElementById("tierPaidPanel").classList.add("active-panel");
-                } else {
-                    // Show welcome 1 free mint to non-insider arrivals
-                    document.getElementById("tierFree1Panel").classList.add("active-panel");
-                }
+                label.innerText = "STANDARD TIER STABLE: 1 FREE MINT OR 0.0002 ETH FEE PER TOKEN";
             }
         }
 
@@ -741,72 +673,153 @@
                 activeProvider = new ethers.BrowserProvider(injectedProvider);
                 const accounts = await activeProvider.send("eth_requestAccounts", []);
                 activeSigner = await activeProvider.getSigner();
+                connectedUserAddress = accounts[0];
                 userContractInstance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, activeSigner);
                 
-                userWalletAddress = accounts[0].toLowerCase();
-                const shortAddress = accounts[0].substring(0,6) + "..." + accounts[0].substring(accounts[0].length - 4);
-                document.getElementById("connectBtn").innerText = shortAddress;
+                // Reposition logic triggered immediately upon authorization
+                const shortAddress = connectedUserAddress.substring(0,6) + "..." + connectedUserAddress.substring(connectedUserAddress.length - 4);
+                
+                // Move button up to the header system frame seamlessly
+                document.getElementById("headerWalletContainer").innerHTML = `<button class="punk-btn" id="connectBtn">${shortAddress}</button>`;
+                
                 notifyApp("Crypto wallet connection established successfully!");
-                refreshDynamicPanelsUI();
+                renderConditionalMintButtons();
             } catch (err) {
                 console.error(err);
                 notifyApp("Connection handshake rejected by user.", "error");
             }
         }
 
-        // Unified Intelligent Multi-Tier Real-Time Mint Execution Layer (Ethers v6 compliant)
-        async function executeMintTierAction(tierType) {
-            if (!userContractInstance || !activeSigner) {
+        // Complete LocalStorage and Matrix Conditional Allocation Handlers
+        async function renderConditionalMintButtons() {
+            const container = document.getElementById("mainMintInteractionBox");
+            if (!userContractInstance) return;
+
+            try {
+                let userMintedAlready = await readOnlyContract.walletMintCount(connectedUserAddress);
+                userMintedAlready = Number(userMintedAlready);
+
+                // Check Persistent Storage Matrix parameters for local validation
+                const localStorageKey_1Free = `icepunks_did_1free_${connectedUserAddress.toLowerCase()}`;
+                const localStorageKey_10Free = `icepunks_did_10free_${connectedUserAddress.toLowerCase()}`;
+                
+                let hasDone1Free = localStorage.getItem(localStorageKey_1Free) === "true";
+                let hasDone10Free = localStorage.getItem(localStorageKey_10Free) === "true";
+
+                let htmlPayload = "";
+
+                // Tier 1: System constraints for the first 100 users (1000 items)
+                if (maxMintedSupply < 1000 && !hasDone10Free && userMintedAlready < 10) {
+                    htmlPayload += `
+                        <div style="margin: 10px 0;">
+                            <p style="font-weight:bold; margin-bottom:5px; color:#ffbc00;">EARLY BIRD TIER ENERGETIC: YOU ARE ELIGIBLE FOR 10 FREE MINTS</p>
+                            <button class="punk-btn" style="background:#00e5ff; font-size:1.1rem; padding:10px 20px;" onclick="triggerMintProtocol('free10')">MINT 10 FREE NFTS</button>
+                        </div>
+                    `;
+                } else {
+                    // If they are part of the first 100 users but already claimed, or if supply exceeds 1000
+                    if (maxMintedSupply < 1000 && (hasDone10Free || userMintedAlready >= 10)) {
+                        // Directly show the paid option with unlimited adjustments
+                        htmlPayload += generatePaidMintUiBlock();
+                    } else {
+                        // Standard Tier: Non-first 100 users scenario parameters
+                        if (!hasDone1Free && userMintedAlready === 0) {
+                            htmlPayload += `
+                                <div style="margin: 10px 0;">
+                                    <p style="font-weight:bold; margin-bottom:5px; color:#ffbc00;">WELCOME BONUS: CLAIM YOUR 1 FREE NFT</p>
+                                    <button class="punk-btn" style="background:#ffbc00; font-size:1.1rem; padding:10px 20px;" onclick="triggerMintProtocol('free1')">CLAIM 1 FREE MINT</button>
+                                </div>
+                            `;
+                        } else {
+                            // Once 1 free mint is fulfilled, unlock paid system automatically
+                            htmlPayload += generatePaidMintUiBlock();
+                        }
+                    }
+                }
+
+                container.innerHTML = htmlPayload;
+            } catch (err) {
+                console.error("UI button parsing context failed", err);
+            }
+        }
+
+        function generatePaidMintUiBlock() {
+            return `
+                <div style="margin: 10px 0; width: 100%;">
+                    <p style="font-weight:bold; margin-bottom:8px;">UNLIMITED COLLECTION MATRIX ACTIVE (0.0002 ETH EACH)</p>
+                    <div class="mint-counter-wrapper">
+                        <button class="counter-btn" onclick="adjustCount(-1)">-</button>
+                        <input type="number" id="customMintQty" value="1" min="1" readonly>
+                        <button class="counter-btn" onclick="adjustCount(1)">+</button>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <button class="punk-btn" style="font-size:1.2rem; padding:8px 24px;" onclick="triggerMintProtocol('paid')">MINT SELECTION NOW</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function adjustCount(val) {
+            const input = document.getElementById("customMintQty");
+            if (!input) return;
+            let current = parseInt(input.value) || 1;
+            current += val;
+            if (current < 1) current = 1;
+            input.value = current;
+        }
+
+        // Unified Processing Pipeline matching the Smart Contract requirements
+        async function triggerMintProtocol(tierType) {
+            if (!userContractInstance) {
                 openWalletModal();
                 return;
             }
 
             let quantity = 1;
-            let etherPriceValue = "0.0";
+            let etherPrice = "0.0";
+            const localStorageKey_1Free = `icepunks_did_1free_${connectedUserAddress.toLowerCase()}`;
+            const localStorageKey_10Free = `icepunks_did_10free_${connectedUserAddress.toLowerCase()}`;
 
             if (tierType === 'free10') {
                 quantity = 10;
-                etherPriceValue = "0.0";
+                etherPrice = "0.0";
             } else if (tierType === 'free1') {
                 quantity = 1;
-                etherPriceValue = "0.0";
+                etherPrice = "0.0";
             } else if (tierType === 'paid') {
-                quantity = parseInt(document.getElementById("mintQuantity").value);
-                if (isNaN(quantity) || quantity <= 0) {
-                    notifyApp("Please select a valid quantity of assets to mint.", "error");
-                    return;
-                }
-                // Base cost formula: 0.0002 ETH per token
+                const inputQty = document.getElementById("customMintQty");
+                quantity = parseInt(inputQty.value) || 1;
+                // Calculate correct price mapping parameters
                 let calculatedCost = quantity * 0.0002;
-                etherPriceValue = calculatedCost.toFixed(5);
+                etherPrice = calculatedCost.toFixed(4);
             }
 
             try {
-                notifyApp(`Broadcasting handshake to block network... Awaiting ledger execution log context.`, "loading");
+                notifyApp("Dispatched to blockchain network... Awaiting signature and confirmation logs.", "loading");
                 
-                // Correctly structured Ethers.js v6 syntax parsing the required payment overhead value directly
-                const tx = await userContractInstance.mint(quantity, {
-                    value: ethers.parseEther(etherPriceValue)
-                });
-
-                notifyApp(`Transaction dispatched successfully! Awaiting block pipeline confirmation...`, "loading");
+                const finalWeiValue = ethers.parseEther(etherPrice);
+                
+                // Fire exact transactional sequence using updated abi parameters
+                const tx = await userContractInstance.mint(quantity, { value: finalWeiValue });
+                
+                notifyApp("Transaction hash confirmed! Processing asset updates on-chain...", "loading");
                 await tx.wait();
-
-                // Persist device status allocations inside the native storage cluster
+                
+                // Commit states inside local tracking vectors securely
                 if (tierType === 'free10') {
-                    localStorage.setItem(`icepunks_free10_${userWalletAddress}`, "true");
+                    localStorage.setItem(localStorageKey_10Free, "true");
                 } else if (tierType === 'free1') {
-                    localStorage.setItem(`icepunks_free1_${userWalletAddress}`, "true");
+                    localStorage.setItem(localStorageKey_1Free, "true");
                 }
 
-                notifyApp(`Mint complete! Successfully allocated ${quantity} IcePunks assets into your address.`, "success");
-                syncChainDataMetrics();
+                notifyApp(`Collection complete! Successfully minted ${quantity} digital assets.`, "success");
+                await syncChainDataMetrics();
             } catch (err) {
                 console.error(err);
-                if (err.message && err.message.toLowerCase().includes("insufficient funds")) {
-                    notifyApp("Execution rejected: Inadequate wallet core balance to power requested ether transaction.", "error");
+                if (err.message && err.message.includes("insufficient funds")) {
+                    notifyApp("Execution rejected: Account balance insufficient to fund transactional costs.", "error");
                 } else {
-                    notifyApp("Execution aborted: Network transaction handshake error occurred.", "error");
+                    notifyApp("Execution aborted: Contract transaction error occurred.", "error");
                 }
             }
         }
