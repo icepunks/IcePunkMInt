@@ -65,7 +65,7 @@
             box-shadow: 0px 0px 0px var(--dark-black);
         }
 
-        /* 1. Intro Screen (Remains exactly as previously configured) */
+        /* 1. Intro Screen */
         #intro-screen {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -196,12 +196,12 @@
         .slider-container img.active { left: 0; }
         .slider-container img.exit { left: -100%; }
 
-        /* Mint UI Box inputs */
+        /* Mint UI Box inputs with Plus/Minus Controls */
         .mint-input-wrapper {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
             margin: 20px 0;
         }
 
@@ -212,6 +212,25 @@
             text-align: center;
             border: 3px solid var(--dark-black);
             background: var(--white-color);
+        }
+
+        .ctrl-btn {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 1.5rem;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background: var(--white-color);
+            border: 3px solid var(--dark-black);
+            box-shadow: 3px 3px 0px var(--dark-black);
+            user-select: none;
+        }
+        .ctrl-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px var(--dark-black);
         }
 
         /* Search Section */
@@ -244,7 +263,7 @@
             margin-right: 10px;
         }
 
-        /* 10k Grid System with Glassmorphism Frozen Layer States (Emoji replaced) */
+        /* 10k Grid System with Glassmorphism Frozen Layer States */
         .grid-frame-container {
             max-height: 400px;
             overflow-y: auto;
@@ -336,6 +355,43 @@
         .footer-link:hover {
             color: #ff007f;
         }
+
+        /* Custom Real-Time In-App Message Center Container */
+        #notification-center {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+            width: 90%;
+        }
+
+        .toast-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-left: 5px solid var(--ice-color);
+            border-top: 1px solid rgba(0, 229, 255, 0.3);
+            border-right: 1px solid rgba(0, 229, 255, 0.3);
+            border-bottom: 1px solid rgba(0, 229, 255, 0.3);
+            padding: 15px 20px;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.15);
+            font-weight: bold;
+            animation: toastSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toast-card.success { border-left-color: #00e5ff; }
+        .toast-card.error { border-left-color: #ff007f; }
+        .toast-card.loading { border-left-color: #ffbc00; }
+
+        @keyframes toastSlideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -343,6 +399,8 @@
     <div id="intro-screen">
         <div class="intro-glitch-text">IcePunks</div>
     </div>
+
+    <div id="notification-center"></div>
 
     <header>
         <div class="logo-main live-glitch-brand">IcePunks</div>
@@ -363,9 +421,11 @@
             </div>
             
             <div class="mint-input-wrapper">
+                <div class="ctrl-btn" onclick="adjustMintQuantity(-1)">-</div>
                 <input type="number" id="mintQuantity" value="1" min="1">
-                <button class="punk-btn" onclick="executeMintAction()">MINT NOW</button>
+                <div class="ctrl-btn" onclick="adjustMintQuantity(1)">+</div>
             </div>
+            <button class="punk-btn" style="width: 200px; font-size: 1.2rem;" onclick="executeMintAction()">MINT NOW</button>
         </div>
 
         <div class="punk-box search-box" style="text-align: center;">
@@ -445,39 +505,15 @@
         const GITHUB_BASE_IMAGE = "https://raw.githubusercontent.com/icepunks/icepunksimage/main/images/";
         const GITHUB_BASE_META = "https://raw.githubusercontent.com/icepunks/icepunksmetadata/main/metadata/";
 
+        // Synchronized with updated Abi (2).txt structure
         const CONTRACT_ABI = [
-            {"inputs":[{"internalType":"string","name":"initBaseURI","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"approved","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Approval","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":false,"internalType":"bool","name":"approved","type":"bool"}],"name":"ApprovalForAll","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":false,"internalType":"bool","name":"isLocked","type":"bool"}],"name":"MarketLockStatusChanged","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},
-            {"inputs":[],"name":"MAX_SUPPLY","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[],"name":"MINT_PRICE","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","type":"text","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"burn","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[],"name":"contractURI","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"getApproved","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"operator","type":"address"}],"name":"isApprovedForAll","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
-            {"inputs":[],"name":"marketLocked","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mint","type":"payable","outputs":[],"type":"function"},
-            {"inputs":[],"name":"name","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
-            {"inputs":[],"name":"nextTokenId","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[],"name":"owner","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
-            {"inputs":[],"name":"renounceOwnership","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"safeTransferFrom","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"safeTransferFrom","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","type":"text","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"string":"newBaseURI","name":"newBaseURI","type":"string"}],"name":"setBaseURI","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"bool":"lockState","name":"lockState","type":"bool"}],"name":"setMarketLock","type":"nonpayable","outputs":[],"type":"function"},
-            {"inputs":[{"bytes4":"interfaceId","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","type":"view","outputs":[{"bool":"","name":"","type":"bool"}],"stateMutability":"view"},
-            {"inputs":[],"name":"symbol","type":"view","outputs":[{"string":"","name":"","type":"string"}],"stateMutability":"view"},
-            {"inputs":[],"name":"tokenURI","type":"view","outputs":[{"string":"","name":"","type":"string"}],"stateMutability":"view"},
-            {"inputs":[],"name":"totalUniqueMinters","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"walletMintCount","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[],"name":"withdraw","type":"nonpayable","outputs":[],"type":"function"}
+            {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"burn","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"string","name":"initBaseURI","type":"string"}],"name":"setBaseURI","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mint","outputs":[],"stateMutability":"payable","type":"function"},
+            {"inputs":[],"name":"nextTokenId","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}
         ];
 
         let activeProvider;
@@ -486,14 +522,39 @@
         let userContractInstance;
         let currentCarouselIndex = 0;
         let maxMintedSupply = 0;
+        let userWalletNFTCount = 0; // State keeping tracker for Free/Paid toggle
+
+        function notifyApp(message, type = 'success') {
+            const container = document.getElementById("notification-center");
+            const card = document.createElement("div");
+            card.className = `toast-card ${type}`;
+            card.innerHTML = `<span>${message}</span>`;
+            container.appendChild(card);
+            
+            setTimeout(() => {
+                card.style.transition = "opacity 0.4s ease, transform 0.4s ease";
+                card.style.opacity = "0";
+                card.style.transform = "translateX(100%)";
+                setTimeout(() => card.remove(), 400);
+            }, 4000);
+        }
+
+        // Plus and Minus Controller Handler
+        function adjustMintQuantity(val) {
+            const input = document.getElementById("mintQuantity");
+            let curr = parseInt(input.value) || 1;
+            curr += val;
+            if (curr < 1) curr = 1;
+            input.value = curr;
+        }
 
         window.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => {
                 const intro = document.getElementById("intro-screen");
-                intro.style.transition = "opacity 0.5s ease";
+                intro.style.transition = "opacity 0.4s ease";
                 intro.style.opacity = 0;
-                setTimeout(() => intro.style.display = "none", 500);
-            }, 2500);
+                setTimeout(() => intro.style.display = "none", 400);
+            }, 1200);
 
             initializeReadOnlyLayer();
             generateCarouselElements();
@@ -520,16 +581,24 @@
                 maxMintedSupply = Number(nextId);
                 document.getElementById("mintCounter").innerText = `${maxMintedSupply} / 10000`;
                 updateMatrixFreezingStates();
+                
+                if (activeSigner) {
+                    const address = await activeSigner.getAddress();
+                    const bal = await readOnlyContract.balanceOf(address);
+                    userWalletNFTCount = Number(bal);
+                }
                 updateDynamicPromoLabels();
             } catch (e) { console.log("Data layer syncing error", e); }
         }
 
         function updateDynamicPromoLabels() {
             const label = document.getElementById("promoStatusMessage");
-            if (maxMintedSupply < 100) {
-                label.innerText = "ACTIVE ALLOCATION TIER: FREE DISTRIBUTION WINDOW ACTIVE!";
+            if (!activeSigner) {
+                label.innerText = "CONNECT WALLET TO CHECK FIRST FREE MINT ELIGIBILITY";
+            } else if (userWalletNFTCount === 0) {
+                label.innerText = "YOUR FIRST NFT IS 100% FREE! (0 ETH)";
             } else {
-                label.innerText = "BASE RATE BALANCES STABLE: 0.0002 ETH REQUIRED PER MINTELEMENT";
+                label.innerText = "PROMO COMPLETE: 0.0002 ETH REQUIRED PER ADDITIONAL MINT";
             }
         }
 
@@ -583,7 +652,7 @@
             }
 
             if (!injectedProvider) {
-                alert(`Requested extension or provider not detected! Install wallet extension.`);
+                notifyApp("Requested extension or provider not detected! Install wallet extension.", "error");
                 return;
             }
 
@@ -595,9 +664,11 @@
                 
                 const shortAddress = accounts[0].substring(0,6) + "..." + accounts[0].substring(accounts[0].length - 4);
                 document.getElementById("connectBtn").innerText = shortAddress;
+                notifyApp("Crypto wallet connection established successfully!");
+                syncChainDataMetrics();
             } catch (err) {
                 console.error(err);
-                alert("Connection handshake rejected.");
+                notifyApp("Connection handshake rejected by user.", "error");
             }
         }
 
@@ -608,45 +679,44 @@
             }
             const quantity = parseInt(document.getElementById("mintQuantity").value);
             if (isNaN(quantity) || quantity <= 0) {
-                alert("Enter a valid processing quantity asset integer.");
+                notifyApp("Please enter a valid asset mint quantity.", "error");
                 return;
             }
 
             try {
-                let uniqueMintersCount = await readOnlyContract.totalUniqueMinters();
-                let userMintedAlready = await readOnlyContract.walletMintCount(await activeSigner.getAddress());
-                
-                uniqueMintersCount = Number(uniqueMintersCount);
-                userMintedAlready = Number(userMintedAlready);
-                
-                let etherPaymentValue = 0;
-                
-                if (uniqueMintersCount <= 100) {
-                    if (userMintedAlready < 10) {
-                        let freeSpace = 10 - userMintedAlready;
-                        if (quantity > freeSpace) {
-                            etherPaymentValue = (quantity - freeSpace) * 0.0002;
-                        }
-                    } else { etherPaymentValue = quantity * 0.0002; }
+                // Fetch dynamic real-time contract values to avoid transaction error
+                const address = await activeSigner.getAddress();
+                const currentBal = await readOnlyContract.balanceOf(address);
+                userWalletNFTCount = Number(currentBal);
+
+                let totalCostEth = 0;
+
+                // Absolute custom accurate logic handling matching contract configurations
+                if (userWalletNFTCount === 0) {
+                    // First NFT is completely free, subsequent units in the same batch cost 0.0002 each
+                    totalCostEth = (quantity - 1) * 0.0002;
                 } else {
-                    if (userMintedAlready === 0) {
-                        etherPaymentValue = (quantity - 1) * 0.0002;
-                    } else { etherPaymentValue = quantity * 0.0002; }
+                    // Wallet has already minted its free limit, base rate of 0.0002 applies globally
+                    totalCostEth = quantity * 0.0002;
                 }
 
-                const finalWeiValue = ethers.parseEther(etherPaymentValue.toString());
+                const finalWeiValue = ethers.parseEther(totalCostEth.toString());
                 
+                notifyApp("Dispatched to blockchain network... Awaiting signature and confirmation logs.", "loading");
+                
+                // Dispatches real-time secure transaction straight to Web3 wallet connection layer
                 const tx = await userContractInstance.mint(quantity, { value: finalWeiValue });
-                alert("Transaction dispatched to network! Awaiting processing block confirmation...");
+                notifyApp("Transaction hash confirmed! Processing asset updates on-chain...", "loading");
+                
                 await tx.wait();
-                alert(`Transaction execution verified! Successfully minted ${quantity} assets.`);
+                notifyApp(`Collection complete! Successfully minted ${quantity} digital assets into your secure ledger account.`, "success");
                 syncChainDataMetrics();
             } catch (err) {
                 console.error(err);
                 if(err.message.includes("insufficient funds")) {
-                    alert("Execution rejected: Account balances insufficient to fund transactional ether costs.");
+                    notifyApp("Execution rejected: Account balance insufficient to fund transactional ether costs.", "error");
                 } else {
-                    alert("Execution aborted: Transaction error occurred.");
+                    notifyApp("Execution aborted: Network transaction error occurred.", "error");
                 }
             }
         }
@@ -658,26 +728,27 @@
             }
             const tokenId = document.getElementById("burnTokenId").value;
             if (tokenId === "" || isNaN(tokenId)) {
-                alert("Input accurate sequential integer ID value.");
+                notifyApp("Input accurate sequential integer ID value.", "error");
                 return;
             }
 
             try {
+                notifyApp(`Initiating incineration protocols for Token ID #${tokenId}...`, "loading");
                 const tx = await userContractInstance.burn(tokenId);
-                alert("Destruction handshake dispatched. Awaiting consensus verification blocks...");
+                notifyApp("Handshake broadcasted. Processing burn completion sequence...", "loading");
                 await tx.wait();
-                alert(`Asset holding ID ${tokenId} permanently incinerated from the ledger core.`);
+                notifyApp(`Asset holding ID ${tokenId} permanently incinerated from the ledger core.`, "success");
                 syncChainDataMetrics();
             } catch (e) {
                 console.error(e);
-                alert("Chamber rejection: Asset ownership validation failed or index is out of bounds.");
+                notifyApp("Chamber rejection: Asset ownership validation failed or index is out of bounds.", "error");
             }
         }
 
         function searchTokenAsset() {
             const id = document.getElementById("searchTokenId").value;
             if(id === "" || isNaN(id) || parseInt(id) < 0 || parseInt(id) > 9999) {
-                alert("Please declare accurate asset IDs within range (0 - 9999).");
+                notifyApp("Please declare accurate asset IDs within range (0 - 9999).", "error");
                 return;
             }
 
@@ -688,6 +759,7 @@
             title.innerText = `ASSET PATTERN DESIGNATION #${id}`;
             img.src = `${GITHUB_BASE_IMAGE}${id}.png`;
             box.style.display = "block";
+            notifyApp(`Successfully verified identity parameters for Asset #${id}`);
         }
 
         function renderAllocationMatrixGrid() {
