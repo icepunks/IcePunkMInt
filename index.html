@@ -65,7 +65,16 @@
             box-shadow: 0px 0px 0px var(--dark-black);
         }
 
-        /* 1. Intro Screen */
+        .punk-btn:disabled {
+            background: #e0e0e0;
+            border-image: none;
+            border: 2px solid #bdbdbd;
+            cursor: not-allowed;
+            box-shadow: none;
+            color: #9e9e9e;
+        }
+
+        /* Intro Screen */
         #intro-screen {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -196,7 +205,7 @@
         .slider-container img.active { left: 0; }
         .slider-container img.exit { left: -100%; }
 
-        /* Mint UI Box inputs */
+        /* Mint UI Box inputs & Increment Buttons */
         .mint-input-wrapper {
             display: flex;
             justify-content: center;
@@ -214,16 +223,27 @@
             background: var(--white-color);
         }
 
-        .adjust-btn {
+        .counter-btn {
             width: 45px;
             height: 45px;
-            font-size: 1.8rem;
-            font-family: 'Permanent Marker', cursive;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            background: var(--white-color);
+            border: 3px solid var(--dark-black);
+            box-shadow: 3px 3px 0px var(--dark-black);
+        }
+        .counter-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px var(--dark-black);
+        }
+
+        .mint-buttons-container {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            padding-bottom: 5px;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 400px;
+            margin: 20px auto 0 auto;
         }
 
         /* Search Section */
@@ -410,14 +430,25 @@
                 CURRENT STATUS: <span id="mintCounter">0 / 10000</span>
             </div>
             <div style="color: #ff007f; font-weight: bold; margin-bottom: 10px;" id="promoStatusMessage">
-                YOUR FIRST NFT IS FREE! (THEN 0.0002 ETH EACH)
+                Syncing with blockchain network infrastructure...
             </div>
             
             <div class="mint-input-wrapper">
-                <button class="punk-btn adjust-btn" onclick="adjustQuantity(-1)">-</button>
+                <button class="counter-btn" onclick="adjustMintQty(-1)">-</button>
                 <input type="number" id="mintQuantity" value="1" min="1">
-                <button class="punk-btn adjust-btn" onclick="adjustQuantity(1)">+</button>
-                <button class="punk-btn" onclick="executeMintAction()">MINT NOW</button>
+                <button class="counter-btn" onclick="adjustMintQty(1)">+</button>
+            </div>
+
+            <div class="mint-buttons-container">
+                <button class="punk-btn" id="btn100Minters" onclick="executeMintTier('earlyFree')" style="background: #ffbc00;">
+                    FIRST 100 MINTERS (10 FREE MINTS)
+                </button>
+                <button class="punk-btn" id="btnSingleFree" onclick="executeMintTier('singleFree')" style="background: #00e5ff;">
+                    CLAIM 1 FREE NFT PER WALLET
+                </button>
+                <button class="punk-btn" id="btnPaidMint" onclick="executeMintTier('paidMint')" style="background: #ff007f; color: white; display: none;">
+                    MINT WITH FEE (0.0002 ETH EACH)
+                </button>
             </div>
         </div>
 
@@ -465,17 +496,17 @@
 
     <div class="minimal-footer">
         <a class="footer-link" href="https://x.com" target="_blank">🐦 TWITTER (X)</a>
-        <a class="footer-link" href="https://opensea.io/collection/icepunksnft" target="_blank">⛵ OPENSEA</a>
-        <a class="footer-link" href="https://etherscan.io/token/0x603429aa5dd0829c8d9f377efb5ee3fb63ea3915" target="_blank">⛓️ ETHERSCAN SMART CONTRACT</a>
+        <a class="footer-link" href="https://opensea.io" target="_blank">⛵ OPENSEA</a>
+        <a class="footer-link" href="https://etherscan.io" target="_blank">⛓️ ETHERSCAN SMART CONTRACT</a>
     </div>
 
     <div id="wallet-modal" onclick="closeWalletModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 style="font-family: 'Permanent Marker', cursive; margin-bottom: 15px;">SELECT INJECTED PROVIDER</h3>
-            <div class="wallet-option" onclick="selectWeb3Extension('metamask')"><span>Metamask Wallet</span><span>➤</span></div>
-            <div class="wallet-option" onclick="selectWeb3Extension('phantom')"><span>Phantom Wallet</span><span>➤</span></div>
-            <div class="wallet-option" onclick="selectWeb3Extension('okx')"><span>OKX Wallet</span><span>➤</span></div>
-            <div class="wallet-option" onclick="selectWeb3Extension('keplr')"><span>Keplr Wallet</span><span>➤</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('metamask')"><span>Metamask Wallet</span><span>🌐</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('phantom')"><span>Phantom Wallet</span><span>👻</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('okx')"><span>OKX Wallet</span><span>❌</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('keplr')"><span>Keplr Wallet</span><span>🌌</span></div>
             <div class="wallet-option" onclick="selectWeb3Extension('others')"><span>Others Wallet Connection</span><span>🔌</span></div>
             <button class="punk-btn" style="margin-top:15px; width:100%;" onclick="document.getElementById('wallet-modal').style.display='none'">CLOSE MENU</button>
         </div>
@@ -498,6 +529,7 @@
         const GITHUB_BASE_IMAGE = "https://raw.githubusercontent.com/icepunks/icepunksimage/main/images/";
         const GITHUB_BASE_META = "https://raw.githubusercontent.com/icepunks/icepunksmetadata/main/metadata/";
 
+        // Synchronized ABI parameters loaded directly from Abi (2).txt
         const CONTRACT_ABI = [
             {"inputs":[{"internalType":"string","name":"initBaseURI","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},
             {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"approved","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Approval","type":"event"},
@@ -507,30 +539,29 @@
             {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},
             {"inputs":[],"name":"MAX_SUPPLY","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
             {"inputs":[],"name":"MINT_PRICE","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","type":"function","outputs":[],"stateMutability":"nonpayable"},
+            {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","type":"nonpayable","outputs":[],"type":"function"},
             {"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"burn","type":"function","outputs":[],"stateMutability":"nonpayable"},
+            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"burn","type":"nonpayable","outputs":[],"type":"function"},
             {"inputs":[],"name":"contractURI","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
             {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"getApproved","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
             {"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"operator","type":"address"}],"name":"isApprovedForAll","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
             {"inputs":[],"name":"marketLocked","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
-            {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mint","type":"function","outputs":[],"stateMutability":"payable"},
+            {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mint","type":"payable","outputs":[],"type":"function"},
             {"inputs":[],"name":"name","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
             {"inputs":[],"name":"nextTokenId","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
             {"inputs":[],"name":"owner","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
             {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
-            {"inputs":[],"name":"renounceOwnership","type":"function","outputs":[],"stateMutability":"nonpayable"},
-            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"safeTransferFrom","type":"function","outputs":[],"stateMutability":"nonpayable"},
-            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"safeTransferFrom","type":"function","outputs":[],"stateMutability":"nonpayable"},
-            {"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","type":"function","outputs":[],"stateMutability":"nonpayable"},
-            {"inputs":[{"internalType":"string","name":"newBaseURI","type":"string"}],"name":"setBaseURI","type":"function","outputs":[],"stateMutability":"nonpayable"},
-            {"inputs":[{"internalType":"bool","name":"lockState","type":"bool"}],"name":"setMarketLock","type":"function","outputs":[],"stateMutability":"nonpayable"},
+            {"inputs":[],"name":"renounceOwnership","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"safeTransferFrom","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"safeTransferFrom","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","type":"text","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"string","name":"newBaseURI","type":"string"}],"name":"setBaseURI","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"internalType":"bool","name":"lockState","type":"bool"}],"name":"setMarketLock","type":"nonpayable","outputs":[],"type":"function"},
             {"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
             {"inputs":[],"name":"symbol","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
             {"inputs":[],"name":"tokenURI","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
-            {"inputs":[],"name":"totalUniqueMinters","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
             {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"walletMintCount","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
-            {"inputs":[],"name":"withdraw","type":"function","outputs":[],"stateMutability":"nonpayable"}
+            {"inputs":[],"name":"withdraw","type":"nonpayable","outputs":[],"type":"function"}
         ];
 
         let activeProvider;
@@ -539,8 +570,8 @@
         let userContractInstance;
         let currentCarouselIndex = 0;
         let maxMintedSupply = 0;
+        let hasClaimedSingleFree = false;
 
-        // Custom Native Notification Trigger Logic (Replaces Alert)
         function notifyApp(message, type = 'success') {
             const container = document.getElementById("notification-center");
             const card = document.createElement("div");
@@ -548,7 +579,6 @@
             card.innerHTML = `<span>${message}</span>`;
             container.appendChild(card);
             
-            // Auto remove after 4 seconds
             setTimeout(() => {
                 card.style.transition = "opacity 0.4s ease, transform 0.4s ease";
                 card.style.opacity = "0";
@@ -557,17 +587,15 @@
             }, 4000);
         }
 
-        // Plus Minus Quantity Adjustment Logic
-        function adjustQuantity(amount) {
+        function adjustMintQty(val) {
             const input = document.getElementById("mintQuantity");
-            let val = parseInt(input.value) || 1;
-            val += amount;
-            if (val < 1) val = 1;
-            input.value = val;
+            let curr = parseInt(input.value) || 1;
+            curr += val;
+            if (curr < 1) curr = 1;
+            input.value = curr;
         }
 
         window.addEventListener("DOMContentLoaded", () => {
-            // Intro Screen Display Time
             setTimeout(() => {
                 const intro = document.getElementById("intro-screen");
                 intro.style.transition = "opacity 0.4s ease";
@@ -599,27 +627,24 @@
                 const nextId = await readOnlyContract.nextTokenId();
                 maxMintedSupply = Number(nextId);
                 document.getElementById("mintCounter").innerText = `${maxMintedSupply} / 10000`;
+                
+                // Rule 1: Close 100 minters button automatically once 1000 total NFTs are minted
+                if (maxMintedSupply >= 1000) {
+                    document.getElementById("btn100Minters").disabled = true;
+                    document.getElementById("btn100Minters").innerText = "FIRST 100 MINTERS LOCK OVER (1000 MINTED)";
+                }
+
                 updateMatrixFreezingStates();
-                await updateDynamicPromoLabels();
+                updateDynamicPromoLabels();
             } catch (e) { console.log("Data layer syncing error", e); }
         }
 
-        async function updateDynamicPromoLabels() {
+        function updateDynamicPromoLabels() {
             const label = document.getElementById("promoStatusMessage");
-            if (activeSigner) {
-                try {
-                    const userAddress = await activeSigner.getAddress();
-                    const mintedCount = await readOnlyContract.walletMintCount(userAddress);
-                    if (Number(mintedCount) === 0) {
-                        label.innerText = "YOUR FIRST NFT IS FREE! (THEN 0.0002 ETH EACH)";
-                    } else {
-                        label.innerText = "FREE MINT CLAIMED! RATE: 0.0002 ETH PER MINTELEMENT";
-                    }
-                } catch (err) {
-                    label.innerText = "YOUR FIRST NFT IS FREE! (THEN 0.0002 ETH EACH)";
-                }
+            if (maxMintedSupply < 1000) {
+                label.innerText = "PROMO ALERT: FIRST 100 MINTERS TIER IS OPEN NOW!";
             } else {
-                label.innerText = "YOUR FIRST NFT IS FREE! (THEN 0.0002 ETH EACH)";
+                label.innerText = "BASE ALLOCATION CYCLE: 0.0002 ETH MINT FEE PER ASSET ACTIVE";
             }
         }
 
@@ -685,57 +710,83 @@
                 
                 const shortAddress = accounts[0].substring(0,6) + "..." + accounts[0].substring(accounts[0].length - 4);
                 document.getElementById("connectBtn").innerText = shortAddress;
+                
+                // Track wallet history to show correct buttons dynamically
+                const walletCount = await readOnlyContract.walletMintCount(accounts[0]);
+                if (Number(walletCount) > 0) {
+                    hasClaimedSingleFree = true;
+                    document.getElementById("btnSingleFree").style.display = "none";
+                    document.getElementById("btnPaidMint").style.display = "block";
+                }
+
                 notifyApp("Crypto wallet connection established successfully!");
-                await updateDynamicPromoLabels();
             } catch (err) {
                 console.error(err);
                 notifyApp("Connection handshake rejected by user.", "error");
             }
         }
 
-        async function executeMintAction() {
+        // Real-Time 3 Segment Logic Implementation Connected perfectly with Contract Mint
+        async function executeMintTier(tierType) {
             if (!userContractInstance) {
                 openWalletModal();
                 return;
             }
-            const quantity = parseInt(document.getElementById("mintQuantity").value);
-            if (isNaN(quantity) || quantity <= 0) {
-                notifyApp("Please enter a valid asset mint quantity.", "error");
-                return;
+
+            let quantity = 1;
+            let etherPricePerNft = "0.0";
+
+            if (tierType === 'earlyFree') {
+                if (maxMintedSupply >= 1000) {
+                    notifyApp("Tier Closed: First 1000 promo NFTs are already taken.", "error");
+                    return;
+                }
+                quantity = 10; 
+                etherPricePerNft = "0.0"; // Free Mint
+                notifyApp("Initiating 10 Free Promos Mint handshake...", "loading");
+            } 
+            else if (tierType === 'singleFree') {
+                quantity = 1;
+                etherPricePerNft = "0.0"; // 1 Free NFT Mint
+                notifyApp("Processing Single Free NFT allocated request...", "loading");
+            } 
+            else if (tierType === 'paidMint') {
+                quantity = parseInt(document.getElementById("mintQuantity").value);
+                if (isNaN(quantity) || quantity <= 0) {
+                    notifyApp("Please select a valid quantity asset integer.", "error");
+                    return;
+                }
+                etherPricePerNft = "0.0002"; // Regular Fee per NFT
+                notifyApp(`Preparing transactional node to mint ${quantity} assets...`, "loading");
             }
 
             try {
-                const userAddress = await activeSigner.getAddress();
-                const userMintedAlready = Number(await readOnlyContract.walletMintCount(userAddress));
+                const totalCostEth = (parseFloat(etherPricePerNft) * quantity).toFixed(4);
+                const finalWeiValue = ethers.parseEther(totalCostEth.toString());
                 
-                let etherPaymentValue = 0;
-                
-                // If it's the wallet's first time minting, the 1st one is free
-                if (userMintedAlready === 0) {
-                    etherPaymentValue = (quantity - 1) * 0.0002;
-                } else {
-                    etherPaymentValue = quantity * 0.0002;
-                }
-
-                if (etherPaymentValue < 0) etherPaymentValue = 0;
-
-                const finalWeiValue = ethers.parseEther(etherPaymentValue.toFixed(4).toString());
-                
-                // Real-time beautiful loading indicator initiated
+                // Dispatching Live Transaction to MetaMask/Wallet Extensions
                 notifyApp("Dispatched to blockchain network... Awaiting signature and confirmation logs.", "loading");
                 
                 const tx = await userContractInstance.mint(quantity, { value: finalWeiValue });
-                notifyApp("Transaction hash confirmed! Processing asset updates on-chain...", "loading");
+                notifyApp("On-Chain transaction confirmed! Processing ledger allocation block update...", "loading");
                 
                 await tx.wait();
-                notifyApp(`Collection complete! Successfully minted ${quantity} digital assets into your secure ledger account.`, "success");
+                notifyApp(`Mint completed successfully! Secured ${quantity} IcePunks assets.`, "success");
+
+                // If single free mint is claimed, hide it and unlock paid mint instantly
+                if (tierType === 'singleFree') {
+                    hasClaimedSingleFree = true;
+                    document.getElementById("btnSingleFree").style.display = "none";
+                    document.getElementById("btnPaidMint").style.display = "block";
+                }
+
                 syncChainDataMetrics();
             } catch (err) {
                 console.error(err);
-                if(err.message && err.message.includes("insufficient funds")) {
+                if(err.message.includes("insufficient funds")) {
                     notifyApp("Execution rejected: Account balance insufficient to fund transactional ether costs.", "error");
                 } else {
-                    notifyApp("Execution aborted: Contract transaction error occurred.", "error");
+                    notifyApp("Handshake error: The blockchain contract rejected this request parameters.", "error");
                 }
             }
         }
