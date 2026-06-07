@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IcePunks Official Mint & Burn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
+    <style>
+        :root {
+            --ice-color: #00e5ff;
+            --white-color: #ffffff;
+            --dark-black: #050505;
+            --multiple-gradient: linear-gradient(90deg, #ff007f, #00e5ff, #7000ff, #ffbc00);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--dark-black);
+        }
+
+        body {
+            background: linear-gradient(135deg, #e0f7fa 0%, #ffffff 50%, #b2ebf2 100%);
+            background-size: 400% 400%;
+            animation: iceFreezeAnimation 15s ease infinite;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        @keyframes iceFreezeAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Multiple Color Outlines Global Pattern */
+        .punk-box {
+            background: rgba(255, 255, 255, 0.85);
+            border: 4px solid transparent;
+            border-image: var(--multiple-gradient) 1;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 8px 8px 0px var(--dark-black);
+        }
+
+        .punk-btn {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 1rem;
+            padding: 6px 16px;
+            cursor: pointer;
+            background: var(--white-color);
+            border: 2px solid transparent;
+            border-image: var(--multiple-gradient) 1;
+            box-shadow: 3px 3px 0px var(--dark-black);
+            transition: transform 0.1s;
+        }
+
+        .punk-btn:active {
+            transform: translate(3px, 3px);
+            box-shadow: 0px 0px 0px var(--dark-black);
+        }
+
+        /* 1. Intro Screen (Remains exactly as previously configured) */
+        #intro-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(180deg, #e0f7fa 0%, #b2ebf2 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 100px rgba(0, 229, 255, 0.3);
+        }
+
+        .intro-glitch-text {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 8vw;
+            color: var(--dark-black);
+            font-weight: bold;
+            position: relative;
+            animation: introGlitchAnim 0.3s infinite;
+            text-transform: uppercase;
+            text-shadow: 3px 3px 0px var(--ice-color);
+        }
+
+        @keyframes introGlitchAnim {
+            0% { transform: translate(0); text-shadow: 3px -3px #ff007f, -3px 3px #7000ff; }
+            20% { transform: translate(-2px, 2px); text-shadow: -2px 2px #ff007f, 2px -2px #7000ff; }
+            40% { transform: translate(2px, -2px); text-shadow: 2px 2px #ff007f, -2px 2px #00e5ff; }
+            60% { transform: translate(-1px, -1px); text-shadow: -2px -2px #ffbc00, 2px 2px #00e5ff; }
+            80% { transform: translate(1px, 2px); text-shadow: 2px -2px #ff007f, -2px -2px #ffbc00; }
+            100% { transform: translate(0); }
+        }
+
+        /* Continuous Multi-Color Glitch for all regular IcePunks text references */
+        .live-glitch-brand {
+            font-family: 'Permanent Marker', cursive;
+            display: inline-block;
+            background: var(--multiple-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            animation: inlineGlitchEffect 0.4s infinite;
+        }
+
+        @keyframes inlineGlitchEffect {
+            0% { transform: skew(0deg); }
+            15% { transform: skew(3deg); filter: hue-rotate(90deg); }
+            30% { transform: skew(-2deg); }
+            45% { transform: skew(0deg); filter: hue-rotate(180deg); }
+            60% { transform: skew(1deg); }
+            75% { transform: skew(-3deg); filter: hue-rotate(270deg); }
+            100% { transform: skew(0deg); }
+        }
+
+        /* Header Layout */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo-main {
+            font-size: 2.5rem;
+        }
+
+        /* Multi-Wallet Modal Styling */
+        #wallet-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--white-color);
+            border: 5px solid transparent;
+            border-image: var(--multiple-gradient) 1;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 10px 10px 0px var(--dark-black);
+        }
+
+        .wallet-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            margin: 10px 0;
+            border: 2px solid var(--dark-black);
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .wallet-option:hover {
+            background: var(--ice-color);
+        }
+
+        /* Carousel Slider Section */
+        .slider-container {
+            width: 100%;
+            max-width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            position: relative;
+            border: 4px solid transparent;
+            border-image: var(--multiple-gradient) 1;
+            background: var(--white-color);
+            overflow: hidden;
+            box-shadow: 6px 6px 0px var(--dark-black);
+        }
+
+        .slider-container img {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0; left: 100%;
+            transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slider-container img.active { left: 0; }
+        .slider-container img.exit { left: -100%; }
+
+        /* Mint UI Box inputs */
+        .mint-input-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .mint-input-wrapper input {
+            width: 100px;
+            padding: 10px;
+            font-size: 1.5rem;
+            text-align: center;
+            border: 3px solid var(--dark-black);
+            background: var(--white-color);
+        }
+
+        /* Search Section */
+        .search-box input {
+            width: 70%;
+            padding: 10px;
+            font-size: 1.1rem;
+            border: 3px solid var(--dark-black);
+            margin-right: 10px;
+        }
+
+        .search-result-display {
+            margin-top: 15px;
+            display: none;
+            text-align: center;
+        }
+
+        .search-result-display img {
+            width: 200px;
+            height: 200px;
+            border: 3px solid var(--dark-black);
+        }
+
+        /* Burn UI Container */
+        .burn-box input {
+            width: 50%;
+            padding: 10px;
+            font-size: 1.1rem;
+            border: 3px solid var(--dark-black);
+            margin-right: 10px;
+        }
+
+        /* 10k Grid System with Glassmorphism Frozen Layer States (Emoji replaced) */
+        .grid-frame-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 3px solid var(--dark-black);
+            padding: 10px;
+            background: rgba(255,255,255,0.6);
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 8px;
+        }
+
+        .grid-item {
+            width: 100%;
+            aspect-ratio: 1;
+            border: 2px solid var(--dark-black);
+            background-size: cover;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .grid-item.frozen::after {
+            content: 'FROZEN';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 229, 255, 0.4);
+            backdrop-filter: blur(1px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--dark-black);
+            letter-spacing: 0.5px;
+        }
+
+        /* Trait Overlay Panel */
+        #trait-modal {
+            display: none;
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .trait-content {
+            background: var(--white-color);
+            padding: 25px;
+            width: 90%;
+            max-width: 400px;
+            border: 4px solid transparent;
+            border-image: var(--multiple-gradient) 1;
+            box-shadow: 8px 8px 0px var(--dark-black);
+        }
+
+        /* Roadmap List */
+        .roadmap-step {
+            margin: 15px 0;
+            padding-left: 15px;
+            border-left: 4px solid var(--ice-color);
+            text-align: left;
+        }
+
+        /* Clean Unified Minimalist Footer System */
+        .minimal-footer {
+            margin: 40px auto;
+            padding: 20px;
+            text-align: center;
+            max-width: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: var(--dark-black);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s;
+        }
+
+        .footer-link:hover {
+            color: #ff007f;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="intro-screen">
+        <div class="intro-glitch-text">IcePunks</div>
+    </div>
+
+    <header>
+        <div class="logo-main live-glitch-brand">IcePunks</div>
+        <button class="punk-btn" id="connectBtn" onclick="openWalletModal()">Connect Wallet</button>
+    </header>
+
+    <main>
+        <div class="slider-container" id="liveCarousel">
+            </div>
+
+        <div class="punk-box" style="text-align: center;">
+            <h2 style="font-family: 'Permanent Marker', cursive; margin-bottom: 10px;">MINT COLLECTIBLES</h2>
+            <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;" id="liveMintText">
+                CURRENT STATUS: <span id="mintCounter">0 / 10000</span>
+            </div>
+            <div style="color: #ff007f; font-weight: bold; margin-bottom: 10px;" id="promoStatusMessage">
+                Syncing with blockchain network infrastructure...
+            </div>
+            
+            <div class="mint-input-wrapper">
+                <input type="number" id="mintQuantity" value="1" min="1">
+                <button class="punk-btn" onclick="executeMintAction()">MINT NOW</button>
+            </div>
+        </div>
+
+        <div class="punk-box search-box" style="text-align: center;">
+            <h3 style="font-family: 'Permanent Marker', cursive; margin-bottom: 10px;">TRAIT VERIFICATION LOGISTICS</h3>
+            <p style="margin-bottom: 10px; font-size: 0.95rem;">Every dynamic <span class="live-glitch-brand" style="font-size:1.1rem;">IcePunks</span> asset maintains exact CryptoPunks aesthetic design matching configurations.</p>
+            <input type="number" id="searchTokenId" placeholder="Enter Token ID (0 - 9999)">
+            <button class="punk-btn" onclick="searchTokenAsset()">SEARCH</button>
+            
+            <div class="search-result-display" id="searchResult">
+                <h4 id="searchResultTitle" style="margin: 10px 0;"></h4>
+                <img id="searchResultImg" src="" alt="Search View">
+            </div>
+        </div>
+
+        <div class="punk-box burn-box" style="text-align: center;">
+            <h3 style="font-family: 'Permanent Marker', cursive; color: #ff007f; margin-bottom: 10px;">DEFLATIONARY INCINERATION</h3>
+            <p style="margin-bottom: 15px;">Incinerate your <span class="live-glitch-brand" style="font-size:1.1rem;">IcePunks</span> asset to secure allocations of our upcoming ICPUNK Utility tokens. Detailed announcements regarding snapshot balances will be dynamically posted to X/Twitter shortly.</p>
+            <input type="number" id="burnTokenId" placeholder="Enter Token ID to Burn">
+            <button class="punk-btn" style="background: #ff007f; color: white;" onclick="executeBurnAction()">BURN ASSET</button>
+        </div>
+
+        <div class="punk-box" style="text-align: center;">
+            <h3 style="font-family: 'Permanent Marker', cursive; margin-bottom: 10px;">LEDGER ALLOCATION MATRIX</h3>
+            <p style="font-size: 0.9rem; margin-bottom: 10px;">Click on specific grids below to query exact decentralized asset configurations. Minted digital assets automatically freeze solid inside the ledger layer network.</p>
+            <div class="grid-frame-container" id="matrixGrid"></div>
+        </div>
+
+        <div class="punk-box" style="text-align: center;">
+            <h3 style="font-family: 'Permanent Marker', cursive; margin-bottom: 10px;">PROJECT ROADMAP</h3>
+            <div class="roadmap-step">
+                <strong>Phase 1: Minting & Distribution Completion</strong>
+                <p>Launch official secondary markets, trigger decentralized automated X/Twitter Sales Bots for instantaneous real-time monitoring tracking metrics.</p>
+            </div>
+            <div class="roadmap-step">
+                <strong>Phase 2: Decentralized Token Launch Injection</strong>
+                <p>Deploy official tokenomics allocations for the utility ICPUNK coin model asset environment. Exactly 60% of absolute token capital reserves will be directly gifted back to our core community layer.</p>
+            </div>
+            <div class="roadmap-step">
+                <strong>Phase 3: Deep Liquidity Provision Pooling</strong>
+                <p>Inject massive locked capital matching pool allocations utilizing our established treasury system holding over 20+ ETH directly into the decentralized automated pair network. Transparent transactional ledger histories are permanently verifiable on <a id="etherscanTreasuryLink" href="https://etherscan.io" target="_blank" style="color:#00e5ff; font-weight:bold; text-decoration:underline;">Etherscan</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <div class="minimal-footer">
+        <a class="footer-link" href="https://x.com" target="_blank">🐦 TWITTER (X)</a>
+        <a class="footer-link" href="https://opensea.io" target="_blank">⛵ OPENSEA</a>
+        <a class="footer-link" href="https://etherscan.io" target="_blank">⛓️ ETHERSCAN SMART CONTRACT</a>
+    </div>
+
+    <div id="wallet-modal" onclick="closeWalletModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 style="font-family: 'Permanent Marker', cursive; margin-bottom: 15px;">SELECT INJECTED PROVIDER</h3>
+            <div class="wallet-option" onclick="selectWeb3Extension('metamask')"><span>Metamask Wallet</span><span>🌐</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('phantom')"><span>Phantom Wallet</span><span>👻</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('okx')"><span>OKX Wallet</span><span>❌</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('keplr')"><span>Keplr Wallet</span><span>🌌</span></div>
+            <div class="wallet-option" onclick="selectWeb3Extension('others')"><span>Others Wallet Connection</span><span>🔌</span></div>
+            <button class="punk-btn" style="margin-top:15px; width:100%;" onclick="document.getElementById('wallet-modal').style.display='none'">CLOSE MENU</button>
+        </div>
+    </div>
+
+    <div id="trait-modal" onclick="document.getElementById('trait-modal').style.display='none'">
+        <div class="trait-content" onclick="event.stopPropagation()">
+            <h3 id="traitModalTitle" style="font-family:'Permanent Marker', cursive; margin-bottom:15px;"></h3>
+            <div id="traitModalBody" style="text-align:left; line-height:1.5;"></div>
+            <button class="punk-btn" style="margin-top:15px; width:100%;" onclick="document.getElementById('trait-modal').style.display='none'">CLOSE</button>
+        </div>
+    </div>
+
+    <script>
+        const ALCHEMY_RPC_URLS = [
+            "https://eth-mainnet.g.alchemy.com/v2/fYKMDL9NELcMLpplFxENG",
+            "https://eth-mainnet.g.alchemy.com/v2/Jei0hdBnB76TsRhZsnx4e"
+        ];
+        const CONTRACT_ADDRESS = "0x603429AA5dD0829c8D9F377efb5ee3Fb63eA3915";
+        const GITHUB_BASE_IMAGE = "https://raw.githubusercontent.com/icepunks/icepunksimage/main/images/";
+        const GITHUB_BASE_META = "https://raw.githubusercontent.com/icepunks/icepunksmetadata/main/metadata/";
+
+        const CONTRACT_ABI = [
+            {"inputs":[{"internalType":"string","name":"initBaseURI","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"approved","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Approval","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":false,"internalType":"bool","name":"approved","type":"bool"}],"name":"ApprovalForAll","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":false,"internalType":"bool","name":"isLocked","type":"bool"}],"name":"MarketLockStatusChanged","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},
+            {"inputs":[],"name":"MAX_SUPPLY","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[],"name":"MINT_PRICE","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","type":"text","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"burn","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[],"name":"contractURI","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"getApproved","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"operator","type":"address"}],"name":"isApprovedForAll","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
+            {"inputs":[],"name":"marketLocked","type":"view","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mint","type":"payable","outputs":[],"type":"function"},
+            {"inputs":[],"name":"name","type":"view","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view"},
+            {"inputs":[],"name":"nextTokenId","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[],"name":"owner","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","type":"view","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view"},
+            {"inputs":[],"name":"renounceOwnership","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"safeTransferFrom","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"safeTransferFrom","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","type":"text","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"string":"newBaseURI","name":"newBaseURI","type":"string"}],"name":"setBaseURI","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"bool":"lockState","name":"lockState","type":"bool"}],"name":"setMarketLock","type":"nonpayable","outputs":[],"type":"function"},
+            {"inputs":[{"bytes4":"interfaceId","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","type":"view","outputs":[{"bool":"","name":"","type":"bool"}],"stateMutability":"view"},
+            {"inputs":[],"name":"symbol","type":"view","outputs":[{"string":"","name":"","type":"string"}],"stateMutability":"view"},
+            {"inputs":[],"name":"tokenURI","type":"view","outputs":[{"string":"","name":"","type":"string"}],"stateMutability":"view"},
+            {"inputs":[],"name":"totalUniqueMinters","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"walletMintCount","type":"view","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view"},
+            {"inputs":[],"name":"withdraw","type":"nonpayable","outputs":[],"type":"function"}
+        ];
+
+        let activeProvider;
+        let activeSigner;
+        let readOnlyContract;
+        let userContractInstance;
+        let currentCarouselIndex = 0;
+        let maxMintedSupply = 0;
+
+        window.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => {
+                const intro = document.getElementById("intro-screen");
+                intro.style.transition = "opacity 0.5s ease";
+                intro.style.opacity = 0;
+                setTimeout(() => intro.style.display = "none", 500);
+            }, 2500);
+
+            initializeReadOnlyLayer();
+            generateCarouselElements();
+            renderAllocationMatrixGrid();
+        });
+
+        async function initializeReadOnlyLayer() {
+            try {
+                const fallbackProvider = new ethers.JsonRpcProvider(ALCHEMY_RPC_URLS[0]);
+                readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, fallbackProvider);
+                syncChainDataMetrics();
+                setInterval(syncChainDataMetrics, 6000);
+            } catch (err) {
+                console.error("Primary RPC layer offline", err);
+                const secondaryProvider = new ethers.JsonRpcProvider(ALCHEMY_RPC_URLS[1]);
+                readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, secondaryProvider);
+            }
+        }
+
+        async function syncChainDataMetrics() {
+            if (!readOnlyContract) return;
+            try {
+                const nextId = await readOnlyContract.nextTokenId();
+                maxMintedSupply = Number(nextId);
+                document.getElementById("mintCounter").innerText = `${maxMintedSupply} / 10000`;
+                updateMatrixFreezingStates();
+                updateDynamicPromoLabels();
+            } catch (e) { console.log("Data layer syncing error", e); }
+        }
+
+        function updateDynamicPromoLabels() {
+            const label = document.getElementById("promoStatusMessage");
+            if (maxMintedSupply < 100) {
+                label.innerText = "ACTIVE ALLOCATION TIER: FREE DISTRIBUTION WINDOW ACTIVE!";
+            } else {
+                label.innerText = "BASE RATE BALANCES STABLE: 0.0002 ETH REQUIRED PER MINTELEMENT";
+            }
+        }
+
+        function generateCarouselElements() {
+            const carousel = document.getElementById("liveCarousel");
+            for(let i = 0; i < 15; i++) {
+                const img = document.createElement("img");
+                img.src = `${GITHUB_BASE_IMAGE}${i}.png`;
+                if(i === 0) img.classList.add("active");
+                carousel.appendChild(img);
+            }
+            setInterval(cycleCarouselImages, 3000);
+        }
+
+        function cycleCarouselImages() {
+            const imgs = document.querySelectorAll("#liveCarousel img");
+            if(imgs.length === 0) return;
+            
+            let currentImg = imgs[currentCarouselIndex];
+            currentImg.className = "exit";
+            
+            currentCarouselIndex = (currentCarouselIndex + 1) % imgs.length;
+            let nextImg = imgs[currentCarouselIndex];
+            nextImg.className = "active";
+        }
+
+        function openWalletModal() {
+            document.getElementById("wallet-modal").style.display = "flex";
+        }
+
+        function closeWalletModal(e) {
+            document.getElementById("wallet-modal").style.display = "none";
+        }
+
+        async function selectWeb3Extension(walletType) {
+            document.getElementById("wallet-modal").style.display = "none";
+            let injectedProvider = null;
+
+            if (walletType === 'metamask' && window.ethereum) {
+                if (window.ethereum.providers && window.ethereum.providers.length > 0) {
+                    injectedProvider = window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum.providers[0];
+                } else { injectedProvider = window.ethereum; }
+            } else if (walletType === 'okx' && window.okxwallet) {
+                injectedProvider = window.okxwallet;
+            } else if (walletType === 'phantom' && window.phantom && window.phantom.ethereum) {
+                injectedProvider = window.phantom.ethereum;
+            } else if (walletType === 'keplr' && window.keplr && window.keplr.ethereum) {
+                injectedProvider = window.keplr.ethereum;
+            } else if (window.ethereum) {
+                injectedProvider = window.ethereum;
+            }
+
+            if (!injectedProvider) {
+                alert(`Requested extension or provider not detected! Install wallet extension.`);
+                return;
+            }
+
+            try {
+                activeProvider = new ethers.BrowserProvider(injectedProvider);
+                const accounts = await activeProvider.send("eth_requestAccounts", []);
+                activeSigner = await activeProvider.getSigner();
+                userContractInstance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, activeSigner);
+                
+                const shortAddress = accounts[0].substring(0,6) + "..." + accounts[0].substring(accounts[0].length - 4);
+                document.getElementById("connectBtn").innerText = shortAddress;
+            } catch (err) {
+                console.error(err);
+                alert("Connection handshake rejected.");
+            }
+        }
+
+        async function executeMintAction() {
+            if (!userContractInstance) {
+                openWalletModal();
+                return;
+            }
+            const quantity = parseInt(document.getElementById("mintQuantity").value);
+            if (isNaN(quantity) || quantity <= 0) {
+                alert("Enter a valid processing quantity asset integer.");
+                return;
+            }
+
+            try {
+                let uniqueMintersCount = await readOnlyContract.totalUniqueMinters();
+                let userMintedAlready = await readOnlyContract.walletMintCount(await activeSigner.getAddress());
+                
+                uniqueMintersCount = Number(uniqueMintersCount);
+                userMintedAlready = Number(userMintedAlready);
+                
+                let etherPaymentValue = 0;
+                
+                if (uniqueMintersCount <= 100) {
+                    if (userMintedAlready < 10) {
+                        let freeSpace = 10 - userMintedAlready;
+                        if (quantity > freeSpace) {
+                            etherPaymentValue = (quantity - freeSpace) * 0.0002;
+                        }
+                    } else { etherPaymentValue = quantity * 0.0002; }
+                } else {
+                    if (userMintedAlready === 0) {
+                        etherPaymentValue = (quantity - 1) * 0.0002;
+                    } else { etherPaymentValue = quantity * 0.0002; }
+                }
+
+                const finalWeiValue = ethers.parseEther(etherPaymentValue.toString());
+                
+                const tx = await userContractInstance.mint(quantity, { value: finalWeiValue });
+                alert("Transaction dispatched to network! Awaiting processing block confirmation...");
+                await tx.wait();
+                alert(`Transaction execution verified! Successfully minted ${quantity} assets.`);
+                syncChainDataMetrics();
+            } catch (err) {
+                console.error(err);
+                if(err.message.includes("insufficient funds")) {
+                    alert("Execution rejected: Account balances insufficient to fund transactional ether costs.");
+                } else {
+                    alert("Execution aborted: Transaction error occurred.");
+                }
+            }
+        }
+
+        async function executeBurnAction() {
+            if (!userContractInstance) {
+                openWalletModal();
+                return;
+            }
+            const tokenId = document.getElementById("burnTokenId").value;
+            if (tokenId === "" || isNaN(tokenId)) {
+                alert("Input accurate sequential integer ID value.");
+                return;
+            }
+
+            try {
+                const tx = await userContractInstance.burn(tokenId);
+                alert("Destruction handshake dispatched. Awaiting consensus verification blocks...");
+                await tx.wait();
+                alert(`Asset holding ID ${tokenId} permanently incinerated from the ledger core.`);
+                syncChainDataMetrics();
+            } catch (e) {
+                console.error(e);
+                alert("Chamber rejection: Asset ownership validation failed or index is out of bounds.");
+            }
+        }
+
+        function searchTokenAsset() {
+            const id = document.getElementById("searchTokenId").value;
+            if(id === "" || isNaN(id) || parseInt(id) < 0 || parseInt(id) > 9999) {
+                alert("Please declare accurate asset IDs within range (0 - 9999).");
+                return;
+            }
+
+            const title = document.getElementById("searchResultTitle");
+            const img = document.getElementById("searchResultImg");
+            const box = document.getElementById("searchResult");
+
+            title.innerText = `ASSET PATTERN DESIGNATION #${id}`;
+            img.src = `${GITHUB_BASE_IMAGE}${id}.png`;
+            box.style.display = "block";
+        }
+
+        function renderAllocationMatrixGrid() {
+            const container = document.getElementById("matrixGrid");
+            container.innerHTML = "";
+            for (let i = 0; i < 150; i++) {
+                const item = document.createElement("div");
+                item.className = "grid-item";
+                item.id = `matrix-cell-${i}`;
+                item.style.backgroundImage = `url('${GITHUB_BASE_IMAGE}${i}.png')`;
+                item.setAttribute("onclick", `queryDetailedMetadataTraits(${i})`);
+                container.appendChild(item);
+            }
+        }
+
+        function updateMatrixFreezingStates() {
+            for (let i = 0; i < 150; i++) {
+                const cell = document.getElementById(`matrix-cell-${i}`);
+                if (cell) {
+                    if (i < maxMintedSupply) {
+                        cell.classList.add("frozen");
+                    } else {
+                        cell.classList.remove("frozen");
+                    }
+                }
+            }
+        }
+
+        async function queryDetailedMetadataTraits(tokenId) {
+            const title = document.getElementById("traitModalTitle");
+            const body = document.getElementById("traitModalBody");
+            
+            title.innerText = `IDENTITY #${tokenId}`;
+            body.innerHTML = "Querying processing traits logs...";
+            document.getElementById("trait-modal").style.display = "flex";
+
+            try {
+                const res = await fetch(`${GITHUB_BASE_META}${tokenId}`);
+                if (!res.ok) throw new Error("Metadata unreachable.");
+                const json = await res.json();
+                
+                let traitsHtml = `<p style='margin-bottom:8px;'><strong>Classification:</strong> ${json.name}</p>`;
+                traitsHtml += `<p style='margin-bottom:12px;'><strong>Description:</strong> ${json.description}</p>`;
+                traitsHtml += `<strong>Attribute Specifications:</strong><ul style='padding-left:20px; margin-top:5px;'>`;
+                
+                json.attributes.forEach(attr => {
+                    traitsHtml += `<li><strong>${attr.trait_type}:</strong> ${attr.value}</li>`;
+                });
+                traitsHtml += "</ul>";
+                
+                body.innerHTML = traitsHtml;
+            } catch (err) {
+                body.innerHTML = `<span style='color:#ff007f;'>Logging node offline for unminted indexes. Freeze state configuration required.</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
